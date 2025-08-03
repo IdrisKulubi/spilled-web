@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/layout";
@@ -15,32 +15,80 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: metaData.title,
+  metadataBase: new URL(metaData.url),
+  title: {
+    default: metaData.title,
+    template: `%s | ${metaData.title}`,
+  },
   description: metaData.description,
   keywords: metaData.keywords,
   authors: [{ name: metaData.author }],
+  creator: metaData.author,
+  publisher: metaData.author,
+  applicationName: "Spilled",
+  referrer: "origin-when-cross-origin",
+
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: metaData.title,
     description: metaData.description,
     url: metaData.url,
     siteName: metaData.title,
+    locale: "en_US",
+    type: "website",
     images: [
       {
-        url: metaData.image,
+        url: `${metaData.url}/opengraph-image`,
         width: 1200,
         height: 630,
         alt: metaData.title,
       },
     ],
-    locale: "en_US",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: metaData.title,
     description: metaData.description,
-    images: [metaData.image],
+    creator: "@spilledapp",
+    site: "@spilledapp",
+    images: [
+      {
+        url: `${metaData.url}/twitter-image`,
+        width: 1200,
+        height: 630,
+        alt: metaData.title,
+      },
+    ],
   },
+  verification: {
+    google: "google-site-verification-code", // Replace with actual verification code
+    yandex: "yandex-verification-code", // Replace with actual verification code
+    yahoo: "yahoo-site-verification-code", // Replace with actual verification code
+  },
+  alternates: {
+    canonical: metaData.url,
+  },
+  category: "Safety",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  colorScheme: "light",
+  themeColor: "#D96BA0",
 };
 
 export default function RootLayout({
@@ -53,8 +101,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50 focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+        >
+          Skip to main content
+        </a>
         <Header />
-        <main className="flex-1">
+        <main id="main-content" className="flex-1" role="main">
           {children}
         </main>
         <Footer />

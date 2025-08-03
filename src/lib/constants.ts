@@ -146,10 +146,10 @@ export const brand: BrandInfo = {
 export const metaData: MetaData = {
   title: "Spilled - Your Safety Network",
   description: "The women-only platform where you can safely share experiences and make informed decisions about the people in your life.",
-  keywords: "women safety, background checks, dating safety, personal safety, women community",
+  keywords: "women safety, background checks, dating safety, personal safety, women community, anonymous sharing, verified users, encrypted messaging, red flags, green flags, women supporting women",
   author: "Spilled",
   url: "https://spilled.app",
-  image: "/spilled-icon.png",
+  image: "/opengraph-image",
 };
 
 // Color scheme constants (for reference)

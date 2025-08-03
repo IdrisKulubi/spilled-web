@@ -2,14 +2,97 @@ import type { Metadata } from "next";
 import { Shield, Users, Heart, CheckCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Us - Spilled",
+  title: "About Us",
   description:
-    "Learn about Spilled's mission to create a safer world for women through community-driven information sharing and support.",
+    "Learn about Spilled's mission to create a safer world for women through community-driven information sharing and support. Discover our values, team, and commitment to women's safety.",
+  keywords: "about spilled, women safety mission, community support, dating safety platform, women empowerment, verified users, anonymous sharing",
+  openGraph: {
+    title: "About Spilled - Your Safety Network",
+    description: "Learn about Spilled's mission to create a safer world for women through community-driven information sharing and support.",
+    url: "https://spilled.app/about",
+    type: "website",
+    images: [
+      {
+        url: "https://spilled.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "About Spilled - Your Safety Network",
+      },
+    ],
+  },
+  twitter: {
+    title: "About Spilled - Your Safety Network",
+    description: "Learn about Spilled's mission to create a safer world for women through community-driven information sharing and support.",
+    images: [
+      {
+        url: "https://spilled.app/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: "About Spilled - Your Safety Network",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://spilled.app/about",
+  },
 };
 
 export default function AboutPage() {
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Spilled',
+      alternateName: 'Spilled - Your Safety Network',
+      url: 'https://spilled.app',
+      logo: 'https://spilled.app/opengraph-image',
+      description: 'Empowering women through shared experiences and community-driven safety. The women-only platform for sharing experiences and making informed decisions about people in your life.',
+      foundingDate: '2024',
+      sameAs: [
+        'https://twitter.com/spilledapp',
+      ],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+254-XXX-XXXX',
+        contactType: 'customer service',
+        email: 'support@spilled.app',
+        availableLanguage: 'English'
+      },
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'KE',
+        addressLocality: 'Nairobi'
+      },
+      applicationCategory: 'SafetyApplication',
+      operatingSystem: 'Web, iOS, Android'
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://spilled.app'
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'About',
+          item: 'https://spilled.app/about'
+        }
+      ]
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#FFF8F9]">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-[#FFF8F9]">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12">
           <h1 className="text-4xl font-bold text-[#3B3B3B] mb-6">
@@ -203,5 +286,6 @@ export default function AboutPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

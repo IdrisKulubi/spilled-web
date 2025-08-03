@@ -1,8 +1,38 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Spilled",
-  description: "Learn how Spilled protects your privacy and handles your personal information on our women-only safety platform.",
+  title: "Privacy Policy",
+  description: "Learn how Spilled protects your privacy and handles your personal information on our women-only safety platform. Comprehensive privacy protection for all users.",
+  keywords: "privacy policy, data protection, user privacy, women safety privacy, personal information, encrypted messaging, anonymous sharing, GDPR compliance",
+  openGraph: {
+    title: "Privacy Policy - Spilled",
+    description: "Learn how Spilled protects your privacy and handles your personal information on our women-only safety platform.",
+    url: "https://spilled.app/privacy",
+    type: "website",
+    images: [
+      {
+        url: "https://spilled.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Privacy Policy - Spilled",
+      },
+    ],
+  },
+  twitter: {
+    title: "Privacy Policy - Spilled",
+    description: "Learn how Spilled protects your privacy and handles your personal information.",
+    images: [
+      {
+        url: "https://spilled.app/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: "Privacy Policy - Spilled",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://spilled.app/privacy",
+  },
 };
 
 export default function PrivacyPage() {
@@ -10,14 +40,16 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-[#FFF8F9]">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12">
-          <h1 className="text-4xl font-bold text-[#3B3B3B] mb-6">Privacy Policy</h1>
-          <p className="text-lg text-[#3B3B3B] mb-8 opacity-80">
-            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
+          <header className="mb-8">
+            <h1 className="text-4xl font-bold text-[#3B3B3B] mb-6">Privacy Policy</h1>
+            <p className="text-lg text-[#3B3B3B] mb-8 opacity-80">
+              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </header>
 
-          <div className="prose prose-lg max-w-none">
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-[#3B3B3B] mb-4">Introduction</h2>
+          <div className="prose prose-lg max-w-none" role="main" aria-labelledby="privacy-policy-heading">
+            <section className="mb-8" aria-labelledby="introduction-heading">
+              <h2 id="introduction-heading" className="text-2xl font-semibold text-[#3B3B3B] mb-4">Introduction</h2>
               <p className="text-[#3B3B3B] mb-4">
                 At Spilled, we are committed to protecting your privacy and ensuring the security of your personal information. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our 

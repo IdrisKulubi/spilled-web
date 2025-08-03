@@ -1,8 +1,38 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - Spilled",
-  description: "Read the terms of service for Spilled, the women-only safety platform for sharing experiences and making informed decisions.",
+  title: "Terms of Service",
+  description: "Read the terms of service for Spilled, the women-only safety platform for sharing experiences and making informed decisions. User guidelines and platform rules.",
+  keywords: "terms of service, user agreement, platform rules, women safety terms, community guidelines, acceptable use policy, privacy terms",
+  openGraph: {
+    title: "Terms of Service - Spilled",
+    description: "Read the terms of service for Spilled, the women-only safety platform for sharing experiences and making informed decisions.",
+    url: "https://spilled.app/terms",
+    type: "website",
+    images: [
+      {
+        url: "https://spilled.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Terms of Service - Spilled",
+      },
+    ],
+  },
+  twitter: {
+    title: "Terms of Service - Spilled",
+    description: "Read the terms of service for Spilled, the women-only safety platform.",
+    images: [
+      {
+        url: "https://spilled.app/twitter-image",
+        width: 1200,
+        height: 630,
+        alt: "Terms of Service - Spilled",
+      },
+    ],
+  },
+  alternates: {
+    canonical: "https://spilled.app/terms",
+  },
 };
 
 export default function TermsPage() {

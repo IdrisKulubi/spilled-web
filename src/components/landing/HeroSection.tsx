@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { AppStoreButton } from "@/components/ui/app-store-button";
 import type { HeroSectionProps } from "@/lib/types";
 
 export function HeroSection({ content, className }: HeroSectionProps) {
@@ -26,30 +26,15 @@ export function HeroSection({ content, className }: HeroSectionProps) {
         >
           {content.subtitle}
         </p>
-        <Button
-          asChild
-          size="lg"
-          className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-2xl font-semibold transition-all duration-200 hover:scale-98 shadow-lg min-h-[48px] min-w-[120px] touch-manipulation focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-          style={{ 
-            backgroundColor: '#D96BA0',
-            color: '#FFFFFF',
-            border: 'none'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#C55A8F';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#D96BA0';
-          }}
-        >
-          <a 
-            href={content.ctaHref} 
-            className=" w-full h-full flex items-center justify-center"
-            aria-label={`${content.ctaText} - Navigate to get started with Spilled`}
-          >
-            {content.ctaText}
-          </a>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4 max-w-md sm:max-w-none mx-auto">
+          {content.appStoreButtons.map((button, index) => (
+            <AppStoreButton 
+              key={index} 
+              button={button} 
+              className="w-full sm:w-auto"
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

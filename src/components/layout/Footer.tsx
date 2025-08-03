@@ -16,12 +16,7 @@ export function Footer({ className }: FooterProps) {
               className="flex items-center space-x-2 focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 rounded-md"
               aria-label={`${brand.name} - Go to homepage`}
             >
-              <div 
-                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm sm:text-base"
-                aria-hidden="true"
-              >
-                S
-              </div>
+             
               <span className="font-bold text-lg sm:text-xl">{brand.name}</span>
             </Link>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">

@@ -29,8 +29,18 @@ export const siteContent: SiteContent = {
   hero: {
     title: "Spilled - Your Safety Network",
     subtitle: "The women-only platform where you can safely share experiences and make informed decisions about the people in your life.",
-    ctaText: "Join Spilled",
-    ctaHref: "#cta",
+    appStoreButtons: [
+      {
+        text: "Download on the App Store",
+        href: "https://apps.apple.com/app/spilled/id123456789", // Replace with actual App Store link
+        icon: "apple",
+      },
+      {
+        text: "Get it on Google Play",
+        href: "https://play.google.com/store/apps/details?id=com.spilled.app", // Replace with actual Play Store link
+        icon: "google",
+      },
+    ],
   },
   features: {
     title: "Discover What Others Have Experienced",
@@ -118,14 +128,18 @@ export const siteContent: SiteContent = {
   cta: {
     title: "Ready to Take Control of Your Safety?",
     description: "Join thousands of women who are already using Spilled to make informed decisions and stay safe.",
-    primaryButton: {
-      text: "Get Started Now",
-      href: "/signup",
-    },
-    secondaryButton: {
-      text: "Learn More",
-      href: "/about",
-    },
+    appStoreButtons: [
+      {
+        text: "Download on the App Store",
+        href: "https://apps.apple.com/app/spilled/id123456789", // Replace with actual App Store link
+        icon: "apple",
+      },
+      {
+        text: "Get it on Google Play",
+        href: "https://play.google.com/store/apps/details?id=com.spilled.app", // Replace with actual Play Store link
+        icon: "google",
+      },
+    ],
   },
 };
 

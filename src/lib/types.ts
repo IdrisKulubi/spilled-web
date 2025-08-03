@@ -28,12 +28,18 @@ export interface SafetyFeature {
   icon: LucideIcon;
 }
 
+// App store button types
+export interface AppStoreButton {
+  text: string;
+  href: string;
+  icon: 'apple' | 'google';
+}
+
 // Content section types
 export interface HeroContent {
   title: string;
   subtitle: string;
-  ctaText: string;
-  ctaHref: string;
+  appStoreButtons: AppStoreButton[];
 }
 
 export interface FeaturesContent {
@@ -56,14 +62,7 @@ export interface SupportContent {
 export interface CTAContent {
   title: string;
   description: string;
-  primaryButton: {
-    text: string;
-    href: string;
-  };
-  secondaryButton?: {
-    text: string;
-    href: string;
-  };
+  appStoreButtons: AppStoreButton[];
 }
 
 export interface SiteContent {

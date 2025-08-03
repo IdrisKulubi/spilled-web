@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield } from "lucide-react";
+import { AppStoreButton } from "@/components/ui/app-store-button";
+import { Shield } from "lucide-react";
 import type { CTASectionProps } from "@/lib/types";
 
 export function CTASection({ content, className }: CTASectionProps) {
@@ -37,92 +37,44 @@ export function CTASection({ content, className }: CTASectionProps) {
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4 max-w-md sm:max-w-none mx-auto">
-          <Button
-            asChild
-            size="lg"
-            className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-2xl font-semibold transition-all duration-200 hover:scale-98 shadow-lg min-h-[48px] touch-manipulation focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-            style={{ 
-              backgroundColor: '#D96BA0',
-              color: '#FFFFFF',
-              border: 'none'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#C55A8F';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#D96BA0';
-            }}
-          >
-            <a 
-              href={content.primaryButton.href} 
-              className="flex items-center justify-center gap-2 w-full h-full"
-              aria-label={`${content.primaryButton.text} - Start using Spilled now`}
-            >
-              {content.primaryButton.text}
-              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-            </a>
-          </Button>
-          
-          {content.secondaryButton && (
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-2xl font-semibold transition-all duration-200 hover:scale-98 shadow-lg min-h-[48px] touch-manipulation focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-              style={{ 
-                borderColor: '#D96BA0',
-                color: '#D96BA0',
-                backgroundColor: 'transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#FDECEF';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <a 
-                href={content.secondaryButton.href} 
-                className="block w-full h-full flex items-center justify-center"
-                aria-label={`${content.secondaryButton.text} - Learn more about Spilled`}
-              >
-                {content.secondaryButton.text}
-              </a>
-            </Button>
-          )}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4 max-w-md sm:max-w-none mx-auto mb-8 sm:mb-12">
+          {content.appStoreButtons.map((button, index) => (
+            <AppStoreButton 
+              key={index} 
+              button={button} 
+              className="w-full sm:w-auto"
+            />
+          ))}
         </div>
         
-        <div className="mt-8 sm:mt-12">
-          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-xs sm:text-sm px-4">
-            <div className="flex items-center">
-              <div 
-                className="w-2 h-2 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
-              <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Free to Join</span>
-            </div>
-            <div className="flex items-center">
-              <div 
-                className="w-2 h-2 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
-              <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Women-Only</span>
-            </div>
-            <div className="flex items-center">
-              <div 
-                className="w-2 h-2 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
-              <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">100% Anonymous</span>
-            </div>
-            <div className="flex items-center">
-              <div 
-                className="w-2 h-2 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
-              <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Secure & Private</span>
-            </div>
+        <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-xs sm:text-sm px-4">
+          <div className="flex items-center">
+            <div 
+              className="w-2 h-2 rounded-full mr-2"
+              style={{ backgroundColor: '#76C893' }}
+            ></div>
+            <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Free to Join</span>
+          </div>
+          <div className="flex items-center">
+            <div 
+              className="w-2 h-2 rounded-full mr-2"
+              style={{ backgroundColor: '#76C893' }}
+            ></div>
+            <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Women-Only</span>
+          </div>
+          <div className="flex items-center">
+            <div 
+              className="w-2 h-2 rounded-full mr-2"
+              style={{ backgroundColor: '#76C893' }}
+            ></div>
+            <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">100% Anonymous</span>
+          </div>
+          <div className="flex items-center">
+            <div 
+              className="w-2 h-2 rounded-full mr-2"
+              style={{ backgroundColor: '#76C893' }}
+            ></div>
+            <span style={{ color: '#3B3B3B' }} className="whitespace-nowrap">Secure & Private</span>
           </div>
         </div>
       </div>

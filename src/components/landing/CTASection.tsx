@@ -37,7 +37,7 @@ export function CTASection({ content, className }: CTASectionProps) {
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4 max-w-md sm:max-w-none mx-auto mb-8 sm:mb-12">
+        {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4 max-w-md sm:max-w-none mx-auto mb-8 sm:mb-12">
           {content.appStoreButtons.map((button, index) => (
             <AppStoreButton 
               key={index} 
@@ -45,7 +45,7 @@ export function CTASection({ content, className }: CTASectionProps) {
               className="w-full sm:w-auto"
             />
           ))}
-        </div>
+        </div> */}
         
         <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-xs sm:text-sm px-4">
           <div className="flex items-center">

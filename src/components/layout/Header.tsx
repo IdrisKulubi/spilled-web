@@ -27,11 +27,11 @@ export function Header({ className }: HeaderProps) {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${
+      className={`fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${
         className || ""
       }`}
     >
-      <div className="container flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6">
+      <div className="container flex h-20 sm:h-24 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <Link 
           href="/" 
@@ -39,7 +39,7 @@ export function Header({ className }: HeaderProps) {
           aria-label={`${brand.name} - Go to homepage`}
         >
           <div 
-            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md overflow-hidden"
+            className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-md overflow-hidden"
             aria-hidden="true"
           >
             <Image 
@@ -76,8 +76,8 @@ export function Header({ className }: HeaderProps) {
         {/* Mobile Navigation */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="h-12 w-12 sm:h-14 sm:w-14 touch-manipulation">
+              <Menu className="h-6 w-6" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>

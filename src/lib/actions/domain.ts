@@ -22,7 +22,7 @@ export async function repoAddPost(input: {
   anonymous: boolean;
   nickname?: string | null;
 }) {
-  const { data: session } = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) throw new Error("Not authenticated");
 
   if (!input.storyText?.trim()) throw new Error("Story text is required");
@@ -34,7 +34,7 @@ export async function repoAddPost(input: {
   const searchTerm = input.guyName || input.guyPhone || input.guySocials || "";
   if (searchTerm) {
     const res = await guyRepo.searchGuys(searchTerm, 1);
-    if (res.data.length > 0) guyId = res.data[0].id;
+    if (res.data.length > 0) guyId = (res.data[0] as any).id as string;
   }
   if (!guyId) {
     const newGuy = await guyRepo.create({
@@ -45,7 +45,7 @@ export async function repoAddPost(input: {
       age: input.guyAge ?? null,
       createdByUserId: session.user.id,
     } as any);
-    guyId = newGuy.id as string;
+    guyId = (newGuy as any).id as string;
   }
 
   const story = await storyRepo.create({
@@ -58,7 +58,7 @@ export async function repoAddPost(input: {
     nickname: input.anonymous ? null : input.nickname ?? null,
   } as any);
 
-  return { success: true, postId: story.id, guyId };
+  return { success: true, postId: (story as any).id as string, guyId };
 }
 
 export async function repoUpdateStory(storyId: string, data: {
@@ -68,7 +68,7 @@ export async function repoUpdateStory(storyId: string, data: {
   anonymous: boolean;
   nickname?: string | null;
 }) {
-  const { data: session } = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) throw new Error("Not authenticated");
   const isOwner = await storyRepo.isOwner(storyId, session.user.id);
   if (!isOwner) throw new Error("You can only edit your own stories");
@@ -83,7 +83,7 @@ export async function repoUpdateStory(storyId: string, data: {
 }
 
 export async function repoDeleteStory(storyId: string) {
-  const { data: session } = await auth.api.getSession({ headers: await headers() });
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) throw new Error("Not authenticated");
   const isOwner = await storyRepo.isOwner(storyId, session.user.id);
   if (!isOwner) throw new Error("You can only delete your own stories");
@@ -95,5 +95,13 @@ export async function repoListComments(storyId: string) {
   // This is a simple passthrough to existing action list; we can add richer methods later
   // Keeping here for parity with repository exposure
   return []; // Implement as needed when migrating full comments feature
+}
+
+export async function repoSearchGuys(term: string, limit = 10) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) throw new Error("Not authenticated");
+  if (!term || !term.trim()) return { data: [], total: 0 };
+  const res = await guyRepo.searchGuys(term.trim(), limit);
+  return res;
 }
 

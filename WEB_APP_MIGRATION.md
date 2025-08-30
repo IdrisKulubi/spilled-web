@@ -174,11 +174,7 @@ Phase 8 — Admin tasks (optional/prioritized)
 [ ] Moderate stories and comments (edit/delete)
 [ ] Reuse mobile adminActions.ts logic
 
-Phase 9 — Testing, accessibility, and deployment
-[ ] Add unit tests for repositories (Node/JSDOM)
-[ ] Add Playwright or Cypress smoke tests for key flows (sign-in, share story, search, comment)
-[ ] Audit a11y with @axe-core/react or Lighthouse; maintain focus states, landmarks, min tap sizes
-[ ] Configure Vercel env vars and deploy; verify DB connectivity and R2
+
 
 Concrete copy/move checklist
 - Copy to spilled-web/src/server/db/

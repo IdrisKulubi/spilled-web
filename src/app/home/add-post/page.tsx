@@ -61,7 +61,7 @@ export default function AddPostPage() {
         });
         if ((res as any)?.success) {
           setSuccess("Posted! 🎉 Redirecting...");
-          setTimeout(() => router.push("/app"), 800);
+          setTimeout(() => router.push("/home"), 800);
         } else {
           setError("Failed to post");
         }

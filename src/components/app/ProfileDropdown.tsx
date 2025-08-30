@@ -10,7 +10,7 @@ export default function ProfileDropdown() {
   const router = useRouter();
 
   const onProfile = () => {
-    router.push("/app/profile");
+    router.push("/home/profile");
   };
 
   const onSignOut = async () => {

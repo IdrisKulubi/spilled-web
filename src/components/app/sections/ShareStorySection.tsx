@@ -22,7 +22,7 @@ export function ShareStorySection() {
             Your story could save another girl from a bad situation. Share what you know - it's anonymous and encrypted 💕
           </p>
           <Button asChild>
-            <Link href="/app/add-post">Share Your Story</Link>
+            <Link href="/home/add-post">Share Your Story</Link>
           </Button>
         </CardContent>
       </Card>
@@ -34,7 +34,9 @@ export function ShareStorySection() {
               <div className="font-medium">Red Flags 🚩</div>
               <div className="text-sm text-muted-foreground">Share warning signs you noticed</div>
             </div>
-            <Button asChild variant="ghost"><Link href="/app/add-post">Start</Link></Button>
+            <Button asChild variant="ghost"><Link href="/home/add-post">Start</Link></Button>
+
+
           </CardContent>
         </Card>
         <Card>
@@ -43,7 +45,8 @@ export function ShareStorySection() {
               <div className="font-medium">Good Vibes ✨</div>
               <div className="text-sm text-muted-foreground">Share positive experiences too!</div>
             </div>
-            <Button asChild variant="ghost"><Link href="/app/add-post">Start</Link></Button>
+            <Button asChild variant="ghost"><Link href="/home/add-post">Start</Link></Button>
+
           </CardContent>
         </Card>
         <Card>
@@ -52,7 +55,7 @@ export function ShareStorySection() {
               <div className="font-medium">Mixed Feelings 🤔</div>
               <div className="text-sm text-muted-foreground">Not sure? Share anyway - it helps!</div>
             </div>
-            <Button asChild variant="ghost"><Link href="/app/add-post">Start</Link></Button>
+            <Button asChild variant="ghost"><Link href="/home/add-post">Start</Link></Button>
           </CardContent>
         </Card>
       </div>

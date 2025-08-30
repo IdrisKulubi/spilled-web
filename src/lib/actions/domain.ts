@@ -105,3 +105,21 @@ export async function repoSearchGuys(term: string, limit = 10) {
   return res;
 }
 
+export async function ensureProfileExists() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user?.id) throw new Error("Not authenticated");
+  const user = session.user as any;
+  // Ensure nickname exists as a friendly default
+  const nickname = user?.nickname || (user?.email ? String(user.email).split("@")[0] : null);
+  // No explicit insert here since better-auth with drizzle should have created the row.
+  // If needed in future we could upsert here via UserRepository.
+  // Decide next path based on verification
+  if (!user?.createdAt) {
+    // If createdAt missing, treat as not fully provisioned but defer to verify gate next
+  }
+  if (!user?.verified) {
+    return { success: true, nextPath: "/home/verify" };
+  }
+  return { success: true, nextPath: "/home" };
+}
+

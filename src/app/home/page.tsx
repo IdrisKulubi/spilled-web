@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import HomeHubTabsWrapper from "@/components/app/HomeHubTabsWrapper";
+import { RecentActivityFeedWrapper } from "@/components/app/RecentActivityFeedWrapper";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +73,7 @@ export default async function AppHomePage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Community</p>
-              <p className="text-xs text-muted-foreground">9.8k helped</p>
+              <p className="text-xs text-muted-foreground">Join the tea</p>
             </div>
             <Button size="sm" variant="ghost" asChild>
               <Link href="#explore">Join</Link>
@@ -125,35 +126,8 @@ export default async function AppHomePage() {
         {/* Sidebar - narrower */}
         <aside className="xl:col-span-3">
           <div className="sticky top-4 space-y-4">
-            {/* Stats */}
-            <Card>
-              <CardHeader className="pb-3">
-                <h3 className="text-sm font-semibold">Community Impact</h3>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="text-2xl font-bold">2.4k</p>
-                    <p className="text-xs text-muted-foreground">Stories shared</p>
-                  </div>
-                  <div className="text-3xl">📝</div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="text-2xl font-bold">9.8k</p>
-                    <p className="text-xs text-muted-foreground">Girls helped</p>
-                  </div>
-                  <div className="text-3xl">💕</div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="text-2xl font-bold">12k</p>
-                    <p className="text-xs text-muted-foreground">Reactions</p>
-                  </div>
-                  <div className="text-3xl">✨</div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Recent Activity Feed */}
+            <RecentActivityFeedWrapper maxItems={4} />
 
             {/* Trending */}
             <Card>

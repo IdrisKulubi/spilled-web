@@ -5,12 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchSection } from "./sections/SearchSection";
 import { ShareStorySection } from "./sections/ShareStorySection";
 import { ExploreSection } from "./sections/ExploreSection";
+import { StoryDetailPage } from "./StoryDetailPage";
 
 type TabKey = "search" | "share" | "explore";
 
 export default function HomeHubTabs({ displayName, initialTab }: { displayName: string; initialTab?: TabKey }) {
   const [tab, setTab] = React.useState<TabKey>(initialTab ?? "explore");
   const [isClient, setIsClient] = React.useState(false);
+  const [selectedStoryId, setSelectedStoryId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -50,6 +52,24 @@ export default function HomeHubTabs({ displayName, initialTab }: { displayName: 
     return () => window.removeEventListener("hashchange", onHash);
   }, [isClient]);
 
+  const handleStoryClick = (storyId: string) => {
+    setSelectedStoryId(storyId);
+  };
+
+  const handleBackFromStory = () => {
+    setSelectedStoryId(null);
+  };
+
+  // If a story is selected, show the detail page
+  if (selectedStoryId) {
+    return (
+      <StoryDetailPage 
+        storyId={selectedStoryId} 
+        onBack={handleBackFromStory} 
+      />
+    );
+  }
+
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
       <TabsList className="w-full flex items-center gap-2 md:flex-wrap">
@@ -59,7 +79,7 @@ export default function HomeHubTabs({ displayName, initialTab }: { displayName: 
       </TabsList>
       <div className="mt-4 space-y-6">
         <TabsContent id="search" value="search" className="m-0">
-          <SearchSection />
+          <SearchSection onStoryClick={handleStoryClick} />
         </TabsContent>
         <TabsContent id="share" value="share" className="m-0">
           <ShareStorySection />

@@ -28,7 +28,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         <div className="h-20 sm:h-24" />
         <SidebarHeader>
           <div className="px-2">
-            <div className="text-xs uppercase tracking-wider text-pink-600">Spilled</div>
+            
             <div className="text-sm font-semibold">Home</div>
           </div>
         </SidebarHeader>

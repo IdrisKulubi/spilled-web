@@ -10,7 +10,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Flag, Sparkles, HelpCircle, Send, MessageCircle, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { getStoryDetails, repoListComments, repoAddComment, repoAddReaction } from "@/lib/actions/domain";
+import { repoAddReaction, repoListComments, repoAddComment, getStoryDetails } from "@/lib/actions/domain";
+import { StoryCardSkeleton } from "./StoryCardSkeleton";
+import { CommentLoadingSkeleton } from "./CommentSkeleton";
 
 type Story = {
   id: string;
@@ -146,9 +148,7 @@ export function StoryDetailPage({ storyId, onBack }: StoryDetailPageProps) {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading story...</p>
-          </div>
+          <StoryCardSkeleton />
         </div>
       </div>
     );
@@ -297,9 +297,7 @@ export function StoryDetailPage({ storyId, onBack }: StoryDetailPageProps) {
           <CardContent className="space-y-6">
             {/* Comments List */}
             {isLoadingComments ? (
-              <div className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">Loading comments...</p>
-              </div>
+              <CommentLoadingSkeleton />
             ) : comments.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <MessageCircle className="h-12 w-12 text-gray-300 mb-2" />

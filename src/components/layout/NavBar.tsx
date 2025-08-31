@@ -135,9 +135,9 @@ export function NavBar() {
                     <DropdownMenuItem onClick={() => router.push("/home/profile")}>
                       <User className="mr-2 h-4 w-4" /> Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/home/settings")}>
+                    {/* <DropdownMenuItem onClick={() => router.push("/home/settings")}>
                       <Settings className="mr-2 h-4 w-4" /> Settings
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
                       <LogOut className="mr-2 h-4 w-4" /> Sign out

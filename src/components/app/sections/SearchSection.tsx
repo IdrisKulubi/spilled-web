@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { repoSearchGuys } from "@/lib/actions/domain";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 
 interface GuyItem {
   id: string;
@@ -69,7 +70,27 @@ export function SearchSection() {
         </CardContent>
       </Card>
 
-      {results.length > 0 && (
+      {loading && (
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-48" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-5 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex flex-wrap gap-3">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {!loading && results.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-base font-semibold">Found the Tea! ☕ ({results.length})</h3>
           {results.map((guy) => (

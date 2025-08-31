@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { repoListComments, repoAddComment } from "@/lib/actions/domain";
 import { toast } from "sonner";
 import { CustomToast, showCommentToast } from "@/components/ui/custom-toast";
+import { CommentLoadingSkeleton } from "./CommentSkeleton";
 
 type Comment = {
   id: string;
@@ -147,9 +148,7 @@ export function CommentModal({
         {/* Comments List */}
         <ScrollArea className="flex-1 pr-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-sm text-muted-foreground">Loading comments...</p>
-            </div>
+            <CommentLoadingSkeleton />
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <MessageCircle className="h-12 w-12 text-gray-300 mb-2" />

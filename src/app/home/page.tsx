@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import HomeHubTabs from "@/components/app/HomeHubTabs";
+import HomeHubTabsWrapper from "@/components/app/HomeHubTabsWrapper";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,7 +118,7 @@ export default async function AppHomePage() {
 
           {/* Tabs content */}
           <div id="explore">
-            <HomeHubTabs displayName={displayName} initialTab="explore" />
+            <HomeHubTabsWrapper displayName={displayName} initialTab="explore" />
           </div>
         </div>
 

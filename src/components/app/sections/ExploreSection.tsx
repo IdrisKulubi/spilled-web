@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { fetchStories } from "@/lib/actions/domain";
 import { StoryCard } from "../StoryCard";
 import { StoryDetailPage } from "../StoryDetailPage";
+import { StoryCardSkeletonList } from "../StoryCardSkeleton";
 
 type Story = {
   id: string;
@@ -77,9 +78,7 @@ export function ExploreSection() {
             Real stories from real girls - stay safe out here! 💜
           </p>
         </div>
-        <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading stories...</p>
-        </div>
+        <StoryCardSkeletonList count={4} />
       </div>
     );
   }

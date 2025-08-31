@@ -219,11 +219,11 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
           </p>
           
           {story.imageUrl && (
-            <div className="rounded-xl overflow-hidden border border-gray-200">
+            <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
               <img
                 src={story.imageUrl}
                 alt="Story image"
-                className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full max-h-[500px] object-contain hover:scale-105 transition-transform duration-300 bg-white"
               />
             </div>
           )}

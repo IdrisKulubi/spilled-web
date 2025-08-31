@@ -9,6 +9,7 @@ import { repoAddPost } from "@/lib/actions/domain";
 import { presignUpload } from "@/lib/actions/upload";
 import { useRouter } from "next/navigation";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AddPostPage() {
   const [isPending, startTransition] = useTransition();
@@ -49,6 +50,7 @@ export default function AddPostPage() {
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
       setError('Image size must be less than 5MB');
       return;
     }
@@ -279,7 +281,7 @@ export default function AddPostPage() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: "red_flag", label: "Red Flag 🚩" },
-              { key: "good_vibes", label: "Good Vibes ✨" },
+              { key: "good_vibes", label: "Green Flag ✅  " },
               { key: "unsure", label: "Unsure ❓" },
             ].map((t) => (
               <button

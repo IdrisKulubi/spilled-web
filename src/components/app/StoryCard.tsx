@@ -5,15 +5,44 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Flag, Sparkles, HelpCircle, MoreHorizontal } from "lucide-react";
+import { 
+  Heart, 
+  MessageCircle, 
+  Flag, 
+  Sparkles, 
+  HelpCircle, 
+  MoreHorizontal, 
+  Edit, 
+  Trash2,
+  AlertTriangle 
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { repoAddReaction, repoRemoveReaction, getUserReaction } from "@/lib/actions/domain";
+import { repoAddReaction, repoRemoveReaction, getUserReaction, repoDeleteStory } from "@/lib/actions/domain";
+import { getCurrentUser } from "@/lib/actions/chat";
 import { CommentModal } from "./CommentModal";
+import { EditStoryModal } from "./EditStoryModal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CustomToast, showReactionToast, showCommentToast } from "@/components/ui/custom-toast";
 import { UserProfileModal } from "./UserProfileModal";
 import { ChatModal } from "./ChatModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type StoryCardProps = {
   story: {
@@ -38,9 +67,11 @@ type StoryCardProps = {
     commentCount: number;
   };
   onStoryClick?: (storyId: string) => void;
+  onStoryDeleted?: () => void;
+  onStoryUpdated?: () => void;
 };
 
-export function StoryCard({ story, onStoryClick }: StoryCardProps) {
+export function StoryCard({ story, onStoryClick, onStoryDeleted, onStoryUpdated }: StoryCardProps) {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [localReactions, setLocalReactions] = useState(story.reactions);
   const [localCommentCount, setLocalCommentCount] = useState(story.commentCount);
@@ -51,23 +82,36 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>("");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState(true);
   
-  // Load user's current reaction on mount
+  // Load user's current reaction and current user ID on mount
   useEffect(() => {
-    async function loadUserReaction() {
+    async function loadUserData() {
       try {
-        const result = await getUserReaction(story.id);
-        if (result.success) {
-          setUserReaction(result.data);
+        // Load user reaction
+        const reactionResult = await getUserReaction(story.id);
+        if (reactionResult.success) {
+          setUserReaction(reactionResult.data);
+        }
+        
+        // Load current user
+        const userResult = await getCurrentUser();
+        if (userResult.success && userResult.data) {
+          setCurrentUserId(userResult.data.id);
         }
       } catch (error) {
-        console.error('Failed to load user reaction:', error);
+        console.error('Failed to load user data:', error);
       } finally {
         setIsLoadingUserReaction(false);
+        setIsLoadingCurrentUser(false);
       }
     }
     
-    loadUserReaction();
+    loadUserData();
   }, [story.id]);
 
   const getTagInfo = (tagType: string | null) => {
@@ -187,11 +231,51 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
     setIsChatModalOpen(true);
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditModalOpen(true);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await repoDeleteStory(story.id);
+      if (result.success) {
+        toast.success("Story deleted successfully");
+        setIsDeleteDialogOpen(false);
+        if (onStoryDeleted) {
+          onStoryDeleted();
+        }
+      } else {
+        toast.error("Failed to delete story");
+      }
+    } catch (error: any) {
+      console.error('Failed to delete story:', error);
+      toast.error(error.message || "Failed to delete story");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleStoryUpdated = () => {
+    if (onStoryUpdated) {
+      onStoryUpdated();
+    }
+  };
+
   // Get author display name
   const authorDisplayName = story.authorNickname || story.authorName || "Anonymous User";
 
   const tagInfo = getTagInfo(story.tagType);
   const totalReactions = localReactions.red_flag + localReactions.good_vibes + localReactions.unsure;
+  
+  // Check if current user is the story owner
+  const isOwner = !isLoadingCurrentUser && currentUserId && story.createdByUserId === currentUserId;
 
   return (
     <>
@@ -234,9 +318,46 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
               </div>
             </div>
             
-            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {isOwner && (
+                  <>
+                    <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Story
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={handleDelete} 
+                      className="cursor-pointer text-red-600 hover:text-red-700 focus:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Story
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.info("Report feature coming soon!");
+                  }}
+                  className="cursor-pointer"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Report Story
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         
@@ -378,6 +499,49 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
           recipientId={selectedUserId}
           recipientName={selectedUserName}
         />
+      )}
+
+      {isOwner && (
+        <>
+          <EditStoryModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            storyId={story.id}
+            onStoryUpdated={handleStoryUpdated}
+          />
+
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  Delete Story
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this story? This action cannot be undone.
+                  All comments and reactions will also be deleted.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isDeleting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      <span>Deleting...</span>
+                    </div>
+                  ) : (
+                    "Delete"
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       )}
     </>
   );

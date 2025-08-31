@@ -212,22 +212,39 @@ export async function addPost(input: {
 }
 
 export async function getStoryById(storyId: string) {
-  const rows = await db
-    .select({
-      id: stories.id,
-      guyId: stories.guyId,
-      userId: stories.userId,
-      text: stories.text,
-      tags: stories.tags,
-      imageUrl: stories.imageUrl,
-      createdAt: stories.createdAt,
-      anonymous: stories.anonymous,
-      nickname: stories.nickname,
-    })
-    .from(stories)
-    .where(eq(stories.id, storyId))
-    .limit(1);
-  return rows[0] || null;
+  "use server";
+  
+  try {
+    const rows = await db
+      .select({
+        id: stories.id,
+        guyId: stories.guyId,
+        userId: stories.createdByUserId,
+        text: stories.content,
+        tagType: stories.tagType,
+        imageUrl: stories.imageUrl,
+        createdAt: stories.createdAt,
+      })
+      .from(stories)
+      .where(eq(stories.id, storyId))
+      .limit(1);
+    
+    if (!rows[0]) {
+      return null;
+    }
+    
+    // Convert single tagType to tags array for compatibility
+    const story = rows[0];
+    return {
+      ...story,
+      tags: story.tagType ? [story.tagType] : [],
+      anonymous: true, // Default value since it's not in the schema
+      nickname: null,  // Default value since it's not in the schema
+    };
+  } catch (error) {
+    console.error('Error fetching story by ID:', error);
+    return null;
+  }
 }
 
 export async function updateStory(storyId: string, data: {
@@ -241,17 +258,18 @@ export async function updateStory(storyId: string, data: {
   if (!session?.user?.id) throw new Error("Not authenticated");
 
   // Ensure ownership
-  const owner = await db.select({ userId: stories.userId }).from(stories).where(eq(stories.id, storyId)).limit(1);
+  const owner = await db.select({ userId: stories.createdByUserId }).from(stories).where(eq(stories.id, storyId)).limit(1);
   if (!owner[0] || owner[0].userId !== session.user.id) throw new Error("You can only edit your own stories");
+
+  // Use the first tag as tagType (since the schema only supports one tag)
+  const tagType = data.tags.length > 0 ? data.tags[0] : null;
 
   await db
     .update(stories)
     .set({
-      text: data.storyText,
-      tags: data.tags as any,
+      content: data.storyText,
+      tagType: tagType,
       imageUrl: data.imageUrl ?? null,
-      anonymous: data.anonymous,
-      nickname: data.anonymous ? null : data.nickname ?? null,
     })
     .where(eq(stories.id, storyId));
 
@@ -262,9 +280,10 @@ export async function deleteStory(storyId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) throw new Error("Not authenticated");
 
-  const owner = await db.select({ userId: stories.userId }).from(stories).where(eq(stories.id, storyId)).limit(1);
+  const owner = await db.select({ userId: stories.createdByUserId }).from(stories).where(eq(stories.id, storyId)).limit(1);
   if (!owner[0] || owner[0].userId !== session.user.id) throw new Error("You can only delete your own stories");
 
+  // Delete related data first
   await db.delete(comments).where(eq(comments.storyId, storyId));
   await db.delete(storyReactions).where(eq(storyReactions.storyId, storyId));
   await db.delete(stories).where(eq(stories.id, storyId));

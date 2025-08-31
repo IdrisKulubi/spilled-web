@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +23,17 @@ import { Button } from "@/components/ui/button";
 import { Home, Compass, Search, SquarePen, User } from "lucide-react";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  // Check if we're on the verify page
+  const isVerifyPage = pathname === '/home/verify';
+  
+  // If on verify page, render children without sidebar
+  if (isVerifyPage) {
+    return <>{children}</>;
+  }
+  
+  // Otherwise, render with sidebar
   return (
     <SidebarProvider defaultOpen>
       {/* Left Sidebar */}

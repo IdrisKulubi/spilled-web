@@ -177,12 +177,10 @@ export default function VerifyPage() {
         <div className="w-full max-w-md mx-auto">
           <Card className="bg-white border-0 shadow-xl">
             <CardContent className="p-8 text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
-                <Clock className="h-10 w-10 text-yellow-600" />
-              </div>
+             
               <h1 className="text-2xl font-bold text-gray-800">Verification Pending</h1>
               <p className="text-gray-600">
-                We're reviewing your ID. You'll be notified once it's approved.
+                We're reviewing your ID. This takes less than 15 minutes.
               </p>
               <div className="pt-4">
                 <Button variant="outline" asChild className="w-full h-12 border-gray-300">
@@ -319,7 +317,7 @@ export default function VerifyPage() {
                         Drop your ID here, or click to browse
                       </p>
                       <p className="mt-1 text-xs text-gray-500">
-                        PNG, JPG up to 5MB
+                        PNG, JPG up to 10MB
                       </p>
                     </div>
                   )}
@@ -334,7 +332,6 @@ export default function VerifyPage() {
                     onClick={() => {
                       setFile(null);
                       setPreviewUrl(null);
-                      toast.info("Image removed");
                     }}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -388,4 +385,3 @@ export default function VerifyPage() {
     </div>
   );
 }
-

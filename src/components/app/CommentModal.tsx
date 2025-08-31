@@ -7,17 +7,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, MoreHorizontal, Edit, Trash2, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { repoListComments, repoAddComment } from "@/lib/actions/domain";
+import { repoListComments, repoAddComment, repoDeleteComment } from "@/lib/actions/domain";
+import { getCurrentUser } from "@/lib/actions/chat";
 import { toast } from "sonner";
 import { CustomToast, showCommentToast } from "@/components/ui/custom-toast";
 import { CommentLoadingSkeleton } from "./CommentSkeleton";
+import { EditCommentModal } from "./EditCommentModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Comment = {
   id: string;
   content: string;
   createdAt: string;
+  createdByUserId: string | null;
   authorName: string | null;
   authorNickname: string | null;
   authorImage: string | null;
@@ -44,12 +64,30 @@ export function CommentModal({
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingComment, setDeletingComment] = useState<Comment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadComments();
+      loadCurrentUser();
     }
   }, [isOpen, storyId]);
+  
+  const loadCurrentUser = async () => {
+    try {
+      const userResult = await getCurrentUser();
+      if (userResult.success && userResult.data) {
+        setCurrentUserId(userResult.data.id);
+      }
+    } catch (error) {
+      console.error('Failed to load current user:', error);
+    }
+  };
 
   const loadComments = async () => {
     setIsLoading(true);
@@ -119,6 +157,51 @@ export function CommentModal({
       handleSubmitComment();
     }
   };
+  
+  const handleEditComment = (comment: Comment) => {
+    setEditingComment(comment);
+    setIsEditModalOpen(true);
+  };
+  
+  const handleDeleteComment = (comment: Comment) => {
+    setDeletingComment(comment);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const confirmDeleteComment = async () => {
+    if (!deletingComment) return;
+    
+    setIsDeleting(true);
+    try {
+      const result = await repoDeleteComment(deletingComment.id);
+      if (result.success) {
+        toast.success("Comment deleted successfully");
+        setIsDeleteDialogOpen(false);
+        setDeletingComment(null);
+        // Refresh comments to reflect the deletion
+        await loadComments();
+        // Notify parent about comment count change
+        if (onCommentAdded) {
+          // This callback is used for count updates, so we can reuse it
+          onCommentAdded();
+        }
+      } else {
+        toast.error(result.error || "Failed to delete comment");
+      }
+    } catch (error: any) {
+      console.error('Failed to delete comment:', error);
+      toast.error(error.message || "Failed to delete comment");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const handleCommentUpdated = async () => {
+    await loadComments();
+    if (onCommentAdded) {
+      onCommentAdded();
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -157,33 +240,66 @@ export function CommentModal({
             </div>
           ) : (
             <div className="space-y-4">
-              {comments.map((comment, index) => (
-                <div key={comment.id}>
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-8 w-8 mt-1">
-                      <AvatarImage src={comment.authorImage || undefined} alt={comment.authorName || "Anonymous"} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 text-xs">
-                        {(comment.authorName || comment.authorNickname || "A").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {comment.authorNickname || comment.authorName || "Anonymous"}
+              {comments.map((comment, index) => {
+                const isOwner = currentUserId && comment.createdByUserId === currentUserId;
+                return (
+                  <div key={comment.id}>
+                    <div className="flex items-start gap-3 group">
+                      <Avatar className="h-8 w-8 mt-1">
+                        <AvatarImage src={comment.authorImage || undefined} alt={comment.authorName || "Anonymous"} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 text-xs">
+                          {(comment.authorName || comment.authorNickname || "A").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {comment.authorNickname || comment.authorName || "Anonymous"}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {comment.content}
                         </p>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                        </span>
                       </div>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {comment.content}
-                      </p>
+                      
+                      {isOwner && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                            >
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem 
+                              onClick={() => handleEditComment(comment)} 
+                              className="cursor-pointer text-xs"
+                            >
+                              <Edit className="h-3 w-3 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteComment(comment)} 
+                              className="cursor-pointer text-red-600 hover:text-red-700 focus:text-red-700 text-xs"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
+                    {index < comments.length - 1 && <Separator className="mt-4" />}
                   </div>
-                  {index < comments.length - 1 && <Separator className="mt-4" />}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
@@ -215,6 +331,52 @@ export function CommentModal({
           </div>
         </div>
       </DialogContent>
+      
+      {/* Edit Comment Modal */}
+      {editingComment && (
+        <EditCommentModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingComment(null);
+          }}
+          commentId={editingComment.id}
+          initialContent={editingComment.content}
+          onCommentUpdated={handleCommentUpdated}
+        />
+      )}
+      
+      {/* Delete Comment Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Delete Comment
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this comment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteComment}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <span>Deleting...</span>
+                </div>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

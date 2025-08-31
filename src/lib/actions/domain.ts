@@ -214,6 +214,42 @@ export async function fetchStories(limit = 10, offset = 0) {
   }
 }
 
+export async function repoUpdateComment(commentId: string, content: string) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id) throw new Error("Not authenticated");
+    
+    const isOwner = await commentRepo.isOwner(commentId, session.user.id);
+    if (!isOwner) throw new Error("You can only edit your own comments");
+    
+    const comment = await commentRepo.updateComment(commentId, content);
+    if (!comment) throw new Error("Failed to update comment");
+    
+    return { success: true, data: comment };
+  } catch (error) {
+    console.error('Failed to update comment:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to update comment' };
+  }
+}
+
+export async function repoDeleteComment(commentId: string) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id) throw new Error("Not authenticated");
+    
+    const isOwner = await commentRepo.isOwner(commentId, session.user.id);
+    if (!isOwner) throw new Error("You can only delete your own comments");
+    
+    const success = await commentRepo.deleteComment(commentId);
+    if (!success) throw new Error("Failed to delete comment");
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete comment:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete comment' };
+  }
+}
+
 export async function ensureProfileExists() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) throw new Error("Not authenticated");

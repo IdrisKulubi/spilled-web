@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { BaseRepository } from "./BaseRepository";
 import { comments, users, type Comment, type InsertComment } from "@/server/db/schema";
 import { ErrorHandler, NotFoundError, ValidationError } from "./utils/ErrorHandler";
@@ -16,7 +16,7 @@ export class CommentRepository extends BaseRepository<Comment, InsertComment> {
     const res = await db
       .select({ id: comments.id })
       .from(comments)
-      .where(eq(comments.id, commentId))
+      .where(and(eq(comments.id, commentId), eq(comments.createdByUserId, userId)))
       .limit(1);
     return res.length > 0;
   }
@@ -36,6 +36,7 @@ export class CommentRepository extends BaseRepository<Comment, InsertComment> {
           id: comments.id,
           content: comments.content,
           createdAt: comments.createdAt,
+          createdByUserId: comments.createdByUserId,
           authorName: users.name,
           authorNickname: users.nickname,
           authorImage: users.image,
@@ -79,6 +80,47 @@ export class CommentRepository extends BaseRepository<Comment, InsertComment> {
     } catch (error) {
       console.error('Failed to add comment:', error);
       return null;
+    }
+  }
+  
+  async updateComment(commentId: string, content: string): Promise<Comment | null> {
+    try {
+      ErrorHandler.validateUUID(commentId);
+      
+      if (!content || content.trim().length === 0) {
+        throw new ValidationError("Comment content cannot be empty", "content");
+      }
+      
+      if (content.length > 500) {
+        throw new ValidationError("Comment cannot exceed 500 characters", "content");
+      }
+      
+      const result = await db
+        .update(comments)
+        .set({ content: content.trim() })
+        .where(eq(comments.id, commentId))
+        .returning();
+      
+      return result[0] || null;
+    } catch (error) {
+      console.error('Failed to update comment:', error);
+      return null;
+    }
+  }
+  
+  async deleteComment(commentId: string): Promise<boolean> {
+    try {
+      ErrorHandler.validateUUID(commentId);
+      
+      const result = await db
+        .delete(comments)
+        .where(eq(comments.id, commentId))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
+      return false;
     }
   }
 }

@@ -2,7 +2,6 @@
 
 import type { HeroSectionProps } from "@/lib/types";
 
-import Image from 'next/image';
 import Link from "next/link";
 
 export function HeroSection({ content, className }: HeroSectionProps) {

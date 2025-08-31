@@ -23,7 +23,7 @@ import { CommentModal } from "./CommentModal";
 import { EditStoryModal } from "./EditStoryModal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { CustomToast, showReactionToast, showCommentToast } from "@/components/ui/custom-toast";
+import { CustomToast, showReactionToast } from "@/components/ui/custom-toast";
 import { UserProfileModal } from "./UserProfileModal";
 import { ChatModal } from "./ChatModal";
 import {
@@ -323,7 +323,7 @@ export function StoryCard({ story, onStoryClick, onStoryDeleted, onStoryUpdated 
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="opacity-60 hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="h-4 w-4" />

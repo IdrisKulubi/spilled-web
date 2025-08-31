@@ -2,15 +2,11 @@
 
 import React from "react";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { Shield, Users, MessageCircle } from "lucide-react";
 
 export interface ThreeDCardDemoProps {
   title?: string;
   description?: string;
-  imageUrl?: string;
-  imageAlt?: string;
+  features?: string[];
   primaryAction?: {
     label: string;
     href?: string;
@@ -27,47 +23,46 @@ export interface ThreeDCardDemoProps {
 export default function ThreeDCardDemo({
   title = "Share Your Story Safely",
   description = "Connect with a supportive community of women while maintaining your privacy and security",
-  imageUrl = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2688&auto=format&fit=crop",
-  imageAlt = "Safe community sharing",
+  features = ["Anonymous sharing", "Verified users only", "Secure platform"],
   primaryAction = { label: "Join Community", href: "/signin" },
   secondaryAction = { label: "Learn More →", href: "#features" },
-  icon = <Shield className="w-6 h-6 text-pink-600" />
 }: ThreeDCardDemoProps) {
   return (
-    <CardContainer className="inter-var">
-      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-pink-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[30rem] h-auto rounded-xl p-6 border">
+    <CardContainer className="inter-var" containerClassName="py-8">
+      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-pink-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-full max-w-sm h-auto rounded-xl p-6 border">
         <CardItem
           translateZ="50"
-          className="flex items-center gap-3 text-xl font-bold text-neutral-600 dark:text-white"
+          className="flex items-center gap-3 text-lg font-bold text-neutral-600 dark:text-white mb-4"
         >
-          {icon}
-          {title}
+          <span className="text-base sm:text-lg">{title}</span>
         </CardItem>
+        
         <CardItem
           as="p"
           translateZ="60"
-          className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
+          className="text-neutral-500 text-sm leading-relaxed mb-6 dark:text-neutral-300"
         >
           {description}
         </CardItem>
-        <CardItem translateZ="100" className="w-full mt-4">
-          <div className="relative h-60 w-full overflow-hidden rounded-xl">
-            <Image
-              src={imageUrl}
-              alt={imageAlt}
-              fill
-              className="object-cover group-hover/card:shadow-xl transition-all duration-300"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
+        
+        <CardItem translateZ="80" className="w-full mb-6">
+          <div className="space-y-3">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
+                <div className="w-2 h-2 bg-pink-500 rounded-full flex-shrink-0" />
+                <span>{feature}</span>
+              </div>
+            ))}
           </div>
         </CardItem>
-        <div className="flex justify-between items-center mt-20">
+        
+        <div className="flex justify-between items-center gap-2">
           <CardItem
             translateZ={20}
             as={secondaryAction.href ? "a" : "button"}
             href={secondaryAction.href}
             onClick={secondaryAction.onClick}
-            className="px-4 py-2 rounded-xl text-xs font-normal dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+            className="px-3 py-2 rounded-lg text-xs font-normal dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer flex-1 text-center"
           >
             {secondaryAction.label}
           </CardItem>
@@ -76,7 +71,7 @@ export default function ThreeDCardDemo({
             as={primaryAction.href ? "a" : "button"}
             href={primaryAction.href}
             onClick={primaryAction.onClick}
-            className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 dark:bg-pink-600 dark:hover:bg-pink-700 text-white text-xs font-bold transition-colors cursor-pointer"
+            className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 dark:bg-pink-600 dark:hover:bg-pink-700 text-white text-xs font-bold transition-colors cursor-pointer flex-1 text-center"
           >
             {primaryAction.label}
           </CardItem>
@@ -91,11 +86,9 @@ export const SafetyCard = () => (
   <ThreeDCardDemo
     title="Verified & Safe"
     description="All users undergo identity verification and background checks to ensure a secure environment"
-    imageUrl="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2689&auto=format&fit=crop"
-    imageAlt="Safety and verification"
-    icon={<Shield className="w-6 h-6 text-pink-600" />}
+    features={["ID verification required", "Background checks", "Women-only platform", "Secure data protection"]}
     primaryAction={{ label: "Get Verified", href: "/signin" }}
-    secondaryAction={{ label: "Learn About Safety →", href: "#safety" }}
+    secondaryAction={{ label: "Learn More", href: "#safety" }}
   />
 );
 
@@ -103,11 +96,9 @@ export const CommunityCard = () => (
   <ThreeDCardDemo
     title="Supportive Community"
     description="Connect with women who understand your experiences and are ready to offer support"
-    imageUrl="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2832&auto=format&fit=crop"
-    imageAlt="Community support"
-    icon={<Users className="w-6 h-6 text-pink-600" />}
+    features={["Share experiences", "Get advice & support", "Anonymous posting", "Trusted community"]}
     primaryAction={{ label: "Join Now", href: "/signin" }}
-    secondaryAction={{ label: "Explore Features →", href: "#features" }}
+    secondaryAction={{ label: "Explore", href: "#features" }}
   />
 );
 
@@ -115,10 +106,8 @@ export const MessagingCard = () => (
   <ThreeDCardDemo
     title="Private Messaging"
     description="Secure, encrypted messaging to connect privately with other verified community members"
-    imageUrl="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2670&auto=format&fit=crop"
-    imageAlt="Private messaging"
-    icon={<MessageCircle className="w-6 h-6 text-pink-600" />}
-    primaryAction={{ label: "Start Chatting", href: "/signin" }}
-    secondaryAction={{ label: "Privacy Policy →", href: "#support" }}
+    features={["End-to-end encryption", "Private conversations", "Verified users only", "Safe communication"]}
+    primaryAction={{ label: "Start Chat", href: "/signin" }}
+    secondaryAction={{ label: "Privacy", href: "#support" }}
   />
 );

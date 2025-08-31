@@ -12,6 +12,8 @@ import { CommentModal } from "./CommentModal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CustomToast, showReactionToast, showCommentToast } from "@/components/ui/custom-toast";
+import { UserProfileModal } from "./UserProfileModal";
+import { ChatModal } from "./ChatModal";
 
 type StoryCardProps = {
   story: {
@@ -20,10 +22,14 @@ type StoryCardProps = {
     imageUrl: string | null;
     tagType: "positive" | "negative" | "neutral" | null;
     createdAt: string;
+    createdByUserId: string | null;
     guyName: string | null;
     guyPhone: string | null;
     guyAge: number | null;
     guyLocation: string | null;
+    authorName: string | null;
+    authorNickname: string | null;
+    authorImage: string | null;
     reactions: {
       red_flag: number;
       good_vibes: number;
@@ -41,6 +47,10 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
   const [userReaction, setUserReaction] = useState<'red_flag' | 'good_vibes' | 'unsure' | null>(null);
   const [isReacting, setIsReacting] = useState(false);
   const [isLoadingUserReaction, setIsLoadingUserReaction] = useState(true);
+  const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserName, setSelectedUserName] = useState<string>("");
   
   // Load user's current reaction on mount
   useEffect(() => {
@@ -65,7 +75,7 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
       case "negative":
         return { label: "🚩 Red Flag", color: "bg-red-100 text-red-800 border-red-200" };
       case "positive":
-        return { label: "✨ Good Vibes", color: "bg-green-100 text-green-800 border-green-200" };
+        return { label: "✅ Green Flag ", color: "bg-green-100 text-green-800 border-green-200" };
       case "neutral":
         return { label: "❓ Unsure", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
       default:
@@ -163,6 +173,23 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
     setLocalCommentCount(prev => prev + 1);
   };
 
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (story.createdByUserId) {
+      setSelectedUserId(story.createdByUserId);
+      setIsUserProfileModalOpen(true);
+    }
+  };
+
+  const handleStartChat = (userId: string, userName: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setIsChatModalOpen(true);
+  };
+
+  // Get author display name
+  const authorDisplayName = story.authorNickname || story.authorName || "Anonymous User";
+
   const tagInfo = getTagInfo(story.tagType);
   const totalReactions = localReactions.red_flag + localReactions.good_vibes + localReactions.unsure;
 
@@ -225,6 +252,30 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
                 alt="Story image"
                 className="w-full max-h-[500px] object-contain hover:scale-105 transition-transform duration-300 bg-white"
               />
+            </div>
+          )}
+          
+          {/* Story Author Section */}
+          {story.createdByUserId && (
+            <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+              <Avatar 
+                className="h-6 w-6 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all" 
+                onClick={handleAuthorClick}
+              >
+                <AvatarImage src={story.authorImage || undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 text-xs">
+                  {authorDisplayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-blue-700">
+                Story shared by{" "}
+                <button 
+                  onClick={handleAuthorClick}
+                  className="font-medium underline hover:no-underline"
+                >
+                  {authorDisplayName}
+                </button>
+              </span>
             </div>
           )}
           
@@ -310,6 +361,24 @@ export function StoryCard({ story, onStoryClick }: StoryCardProps) {
         guyName={story.guyName}
         onCommentAdded={handleCommentAdded}
       />
+
+      {selectedUserId && (
+        <UserProfileModal
+          isOpen={isUserProfileModalOpen}
+          onClose={() => setIsUserProfileModalOpen(false)}
+          userId={selectedUserId}
+          onStartChat={handleStartChat}
+        />
+      )}
+
+      {selectedUserId && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => setIsChatModalOpen(false)}
+          recipientId={selectedUserId}
+          recipientName={selectedUserName}
+        />
+      )}
     </>
   );
 }

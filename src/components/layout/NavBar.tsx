@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Menu, User, LogOut, Settings, Home, ChevronDown } from "lucide-react";
+import { Menu, User, LogOut,  Home, ChevronDown, MessageCircle } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export function NavBar() {
   return (
     <>
       {/* Spacer to prevent overlap with fixed navbar */}
-      <div className="h-16 sm:h-20" />
+      <div className="h-12 sm:h-12" />
 
       <header
         className={cn(
@@ -112,7 +112,7 @@ export function NavBar() {
               ))}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 absolute right-4">
               {loading ? (
                 <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
               ) : user ? (
@@ -131,6 +131,9 @@ export function NavBar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => router.push("/home")}> 
                       <Home className="mr-2 h-4 w-4" /> Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/home/chat")}>
+                      <MessageCircle className="mr-2 h-4 w-4" /> Messages
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push("/home/profile")}>
                       <User className="mr-2 h-4 w-4" /> Profile
@@ -181,6 +184,7 @@ export function NavBar() {
                       {user ? (
                         <>
                           <Link href="/home" className="block px-4 py-2 rounded-md hover:bg-gray-100" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                          <Link href="/home/chat" className="block px-4 py-2 rounded-md hover:bg-gray-100" onClick={() => setIsOpen(false)}>Messages</Link>
                           <Link href="/home/profile" className="block px-4 py-2 rounded-md hover:bg-gray-100" onClick={() => setIsOpen(false)}>Profile</Link>
                           <button className="w-full text-left px-4 py-2 rounded-md text-red-600 hover:bg-red-50" onClick={() => { handleSignOut(); setIsOpen(false); }}>Sign out</button>
                         </>

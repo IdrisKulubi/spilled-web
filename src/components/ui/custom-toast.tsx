@@ -15,12 +15,12 @@ interface CustomToastProps {
 const genZMessages = {
   reaction: {
     red_flag: {
-      added: ["Red flag spotted! 🚩", "That's sus energy fr 🚩✨", "Major red flag vibes! 🚩", "Yikes detected! 🚩💀"],
+      added: ["Red flag spotted! 🚩", "That's sus energy fr 🚩✨", "Major red flag vibes 🚩", "Yikes detected! 🚩💀"],
       removed: ["Red flag removed bestie 💅", "Unflagged that energy ✨", "Changed your mind? Valid 🚩❌"],
       switched: ["Switched to red flag! 🚩", "New vibe check: sus! 🚩"]
     },
     good_vibes: {
-      added: ["Good vibes only! ✨💫", "That's the energy! ✨🌟", "Serving good vibes! ✨💅", "Main character energy! ✨👑"],
+      added: ["Good vibes only ✅ 💫", "That's the energy ✅ 🌟", "Serving good vibes ✅ 💅", "Main character energy! ✨👑"],
       removed: ["Vibes retracted bestie 💫", "Changed the energy ✨", "Vibe check reversed! 💫❌"],
       switched: ["Switched to good vibes! ✨", "New energy: immaculate! ✨"]
     },
@@ -31,11 +31,11 @@ const genZMessages = {
     }
   },
   comment: {
-    added: ["Comment posted! Let's go! 💬✨", "Spilled the tea successfully! ☕💅", "Your thoughts = delivered 💬🚀", "Said what needed to be said! 💬👑"],
+    added: ["Comment posted! Let's go 💬✨", "Spilled the tea successfully! ☕💅", "Your thoughts = delivered 💬🚀", "Said what needed to be said! 💬👑"],
     error: ["Comment failed to send bestie 😭", "Tea didn't spill properly 😭☕", "Technical difficulties fr 💀", "Try again queen! 💅✨"]
   },
   generic: {
-    success: ["Success! That's what we like! ✨", "Periodt! ✨💅", "Ate that up! 🔥", "Serving excellence! 👑"],
+    success: ["Success! That's what we like ✨", "Periodt ✨💅", "Ate that up! 🔥", "Serving excellence! 👑"],
     error: ["Oops! Something went wrong 😭", "Not the technical difficulties! 💀", "This ain't it chief 😭✨", "Error era activated 💀"],
     warning: ["Heads up bestie! ⚠️", "Plot twist incoming! ⚠️✨", "Attention required! 👀"]
   }

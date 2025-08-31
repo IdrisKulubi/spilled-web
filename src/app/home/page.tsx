@@ -19,7 +19,7 @@ export default async function AppHomePage() {
     return redirect("/home/verify");
   }
 
-  const displayName = user?.nickname || (user?.email ? String(user.email).split("@")[0] : "bestie");
+  const displayName = user?.nickname || (user?.name ? String(user.name).split("@")[0] : "bestie");
 
   return (
     <div className="w-full max-w-full">
@@ -34,8 +34,8 @@ export default async function AppHomePage() {
        
       </div>
 
-      {/* Quick actions bar */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Quick actions bar - hidden on mobile */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="p-2 bg-pink-100 rounded-lg">
@@ -101,21 +101,7 @@ export default async function AppHomePage() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Main content - wider */}
         <div className="xl:col-span-9">
-          {/* Search bar */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex gap-2">
-                <Input 
-                  className="flex-1" 
-                  placeholder="Search for someone by name, phone, or social handle..." 
-                  aria-label="Search"
-                />
-                <Button asChild>
-                  <Link href="#search">Search</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+         
 
           {/* Tabs content */}
           <div id="explore">
@@ -146,7 +132,7 @@ export default async function AppHomePage() {
                     href="#search" 
                     className="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-medium hover:bg-green-200 transition-colors"
                   >
-                    ✨ Good Vibes
+                    ✅ Green Flag
                   </Link>
                   <Link 
                     href="#search" 

@@ -105,7 +105,7 @@ export function SearchSection({ onStoryClick }: SearchSectionProps = {}) {
       case "negative":
         return { label: "🚩 Red Flag", color: "bg-red-100 text-red-800 border-red-200" };
       case "positive":
-        return { label: "✨ Good Vibes", color: "bg-green-100 text-green-800 border-green-200" };
+        return { label: "✅ Green Flag", color: "bg-green-100 text-green-800 border-green-200" };
       case "neutral":
         return { label: "❓ Unsure", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
       default:

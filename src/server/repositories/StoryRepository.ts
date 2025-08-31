@@ -77,14 +77,20 @@ export class StoryRepository extends BaseRepository<Story, InsertStory> {
           imageUrl: stories.imageUrl,
           tagType: stories.tagType,
           createdAt: stories.createdAt,
+          createdByUserId: stories.createdByUserId,
           guyName: guys.name,
           guyPhone: guys.phone,
           guyAge: guys.age,
           guyLocation: guys.location,
           // guyImageUrl: guys.imageUrl, // TODO: Add after column exists
+          // Story author info
+          authorName: users.name,
+          authorNickname: users.nickname,
+          authorImage: users.image,
         })
         .from(stories)
         .leftJoin(guys, eq(stories.guyId, guys.id))
+        .leftJoin(users, eq(stories.createdByUserId, users.id))
         .orderBy(desc(stories.createdAt))
         .limit(limit)
         .offset(offset);

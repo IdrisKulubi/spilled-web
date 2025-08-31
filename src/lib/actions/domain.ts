@@ -163,7 +163,7 @@ export async function repoAddReaction(storyId: string, reactionType: 'red_flag' 
   }
 }
 
-export async function repoRemoveReaction(storyId: string) {
+export async function repoRemoveReaction(storyId: string,reactionType: 'red_flag' | 'good_vibes' | 'unsure') {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user?.id) throw new Error("Not authenticated");

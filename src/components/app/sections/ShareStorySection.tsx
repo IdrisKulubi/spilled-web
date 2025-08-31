@@ -42,7 +42,7 @@ export function ShareStorySection() {
         <Card>
           <CardContent className="pt-4 flex items-center justify-between">
             <div>
-              <div className="font-medium">Good Vibes ✨</div>
+              <div className="font-medium">Green Flag ✅ </div>
               <div className="text-sm text-muted-foreground">Share positive experiences too!</div>
             </div>
             <Button asChild variant="ghost"><Link href="/home/add-post">Start</Link></Button>

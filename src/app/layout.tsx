@@ -109,7 +109,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <div className="flex flex-col min-h-screen pt-20 sm:pt-24">
+        <div className="flex flex-col min-h-screen pt-0 sm:pt-12">
           <NavBar/>
           <main id="main-content" className="flex-1" role="main">
             <Toaster/>

@@ -84,5 +84,15 @@ export class ErrorHandler {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(uuid)) throw new ValidationError(`Invalid UUID format for ${fieldName}`, fieldName);
   }
+
+  static validateUserId(userId: string, fieldName: string = "userId"): void {
+    // More flexible validation for user IDs (better-auth may use different formats)
+    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+      throw new ValidationError(`${fieldName} is required`, fieldName);
+    }
+    if (userId.trim().length < 3 || userId.trim().length > 50) {
+      throw new ValidationError(`${fieldName} must be between 3 and 50 characters`, fieldName);
+    }
+  }
 }
 

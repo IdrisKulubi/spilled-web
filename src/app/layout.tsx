@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header, Footer } from "@/components/layout";
 import { metaData } from "@/lib/constants";
 import { NavBar } from "@/components/layout/NavBar";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -111,6 +112,7 @@ export default function RootLayout({
         <div className="flex flex-col min-h-screen pt-20 sm:pt-24">
           <NavBar/>
           <main id="main-content" className="flex-1" role="main">
+            <Toaster/>
             {children}
           </main>
         </div>

@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { repoAddPost } from "@/lib/actions/domain";
+import { presignUpload } from "@/lib/actions/upload";
 import { useRouter } from "next/navigation";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 export default function AddPostPage() {
   const [isPending, startTransition] = useTransition();
@@ -24,9 +26,87 @@ export default function AddPostPage() {
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Image upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const toggleTag = (tag: string) => {
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
+
+  const uploadImage = async () => {
+    if (!selectedImage) return null;
+    
+    setIsUploading(true);
+    try {
+      // Get presigned upload URL
+      const { uploadUrl, publicUrl } = await presignUpload({
+        folder: 'stories',
+        filename: selectedImage.name,
+        contentType: selectedImage.type
+      });
+
+      // Upload to R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: selectedImage,
+        headers: {
+          'Content-Type': selectedImage.type
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      setUploadedImageUrl(publicUrl);
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError('Failed to upload image. Please try again.');
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setUploadedImageUrl(null);
+    // Reset file input
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
 
   const onSubmit = () => {
@@ -44,9 +124,29 @@ export default function AddPostPage() {
       setError("Provide a name, phone, or social");
       return;
     }
+    // Photo is required
+    if (!selectedImage && !uploadedImageUrl) {
+      setError("Please select a photo to support your story");
+      return;
+    }
+    // If image is selected but not uploaded, require upload first
+    if (selectedImage && !uploadedImageUrl) {
+      setError("Please upload the selected image first");
+      return;
+    }
 
     startTransition(async () => {
       try {
+        // If there's an image selected but not uploaded, upload it first
+        let finalImageUrl = uploadedImageUrl;
+        if (selectedImage && !uploadedImageUrl) {
+          finalImageUrl = await uploadImage();
+          if (!finalImageUrl) {
+            setError("Failed to upload image. Please try again.");
+            return;
+          }
+        }
+
         const res = await repoAddPost({
           guyName: guyName || undefined,
           guyPhone: guyPhone || undefined,
@@ -55,7 +155,7 @@ export default function AddPostPage() {
           guyAge: guyAge ? Number(guyAge) : undefined,
           storyText: storyText,
           tags: tags as any,
-          imageUrl: null,
+          imageUrl: finalImageUrl,
           anonymous,
           nickname: anonymous ? undefined : nickname || undefined,
         });
@@ -112,6 +212,64 @@ export default function AddPostPage() {
           <label className="text-sm font-medium">Your Story *</label>
           <Textarea value={storyText} onChange={(e) => setStoryText(e.target.value)} rows={6} placeholder="Share your story here..." />
           <div className="text-xs text-muted-foreground">{storyText.length} characters</div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6 space-y-3">
+          <label className="text-sm font-medium">Add Photo *</label>
+          <div className="text-xs text-muted-foreground mb-3">Share a relevant photo to support your story. JPG, PNG up to 5MB.</div>
+          
+          {!imagePreview ? (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                <ImageIcon className="h-8 w-8 text-gray-400" />
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium text-primary">Click to upload</span> or drag and drop
+                </div>
+              </label>
+            </div>
+          ) : (
+            <div className="relative inline-block">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-48 h-32 object-cover rounded-lg border"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              {selectedImage && !uploadedImageUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={uploadImage}
+                    disabled={isUploading}
+                    className="text-xs"
+                  >
+                    {isUploading ? "Uploading..." : "Upload Image"}
+                  </Button>
+                </div>
+              )}
+              {uploadedImageUrl && (
+                <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
+                  ✓ Image uploaded successfully
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

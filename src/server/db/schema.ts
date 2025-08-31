@@ -92,24 +92,20 @@ export const guys = pgTable("guys", {
 // Stories table
 export const stories = pgTable("stories", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-  guyId: text("guy_id").references(() => guys.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
-  text: text("text"),
-  tags: tagTypeEnum("tags").array(),
+  guyId: text("guy_id").references(() => guys.id),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  content: text("content"),
+  tagType: text("tag_type"), // Using text instead of enum for now
   imageUrl: text("image_url"),
-  anonymous: boolean("anonymous").default(false),
-  nickname: text("nickname"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Comments table
 export const comments = pgTable("comments", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-  storyId: text("story_id").references(() => stories.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
-  text: text("text"),
-  anonymous: boolean("anonymous").default(false),
-  nickname: text("nickname"),
+  storyId: text("story_id").references(() => stories.id),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  content: text("content"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -118,7 +114,7 @@ export const messages = pgTable("messages", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   senderId: text("sender_id").references(() => users.id),
   receiverId: text("receiver_id").references(() => users.id),
-  text: text("text"),
+  content: text("content"),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });

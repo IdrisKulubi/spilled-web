@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default async function ProfilePage() {
   const  session  = await auth.api.getSession({ headers: await headers() });
@@ -10,7 +13,14 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      <div>
+      {/* Back button */}
+      <div className="flex items-center gap-4">
+        <Link href="/home">
+          <Button variant="ghost" size="sm" className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
+        </Link>
         <h1 className="text-2xl font-bold">Your Profile</h1>
       </div>
       <Card>

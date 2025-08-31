@@ -10,8 +10,10 @@ type TabKey = "search" | "share" | "explore";
 
 export default function HomeHubTabs({ displayName, initialTab }: { displayName: string; initialTab?: TabKey }) {
   const [tab, setTab] = React.useState<TabKey>(initialTab ?? "explore");
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    setIsClient(true);
     // Establish initial tab from URL hash or localStorage if present
     let next: TabKey = initialTab ?? "explore";
     if (typeof window !== "undefined") {
@@ -30,11 +32,15 @@ export default function HomeHubTabs({ displayName, initialTab }: { displayName: 
   }, []);
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") window.localStorage.setItem("spilled:lastTab", tab);
-  }, [tab]);
+    if (typeof window !== "undefined" && isClient) {
+      window.localStorage.setItem("spilled:lastTab", tab);
+    }
+  }, [tab, isClient]);
 
   // Update tab when URL hash changes (#search, #share, #explore)
   React.useEffect(() => {
+    if (!isClient) return;
+    
     function onHash() {
       if (typeof window === "undefined") return;
       const h = window.location.hash?.replace("#", "");
@@ -42,7 +48,7 @@ export default function HomeHubTabs({ displayName, initialTab }: { displayName: 
     }
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, []);
+  }, [isClient]);
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">

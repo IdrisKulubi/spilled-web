@@ -7,7 +7,7 @@ export const verificationStatus = pgEnum("verification_status", ['pending', 'app
 
 
 export const stories = pgTable("stories", {
-	id: text().default(gen_random_uuid()).primaryKey().notNull(),
+	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	content: text(),
 	imageUrl: text("image_url"),
 	tagType: tagType("tag_type"),
@@ -28,7 +28,7 @@ export const stories = pgTable("stories", {
 ]);
 
 export const comments = pgTable("comments", {
-	id: text().default(gen_random_uuid()).primaryKey().notNull(),
+	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	content: text(),
 	storyId: text("story_id"),
 	createdByUserId: text("created_by_user_id"),
@@ -47,7 +47,7 @@ export const comments = pgTable("comments", {
 ]);
 
 export const guys = pgTable("guys", {
-	id: text().default(gen_random_uuid()).primaryKey().notNull(),
+	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	name: text(),
 	phone: text(),
 	socials: text(),
@@ -64,7 +64,7 @@ export const guys = pgTable("guys", {
 ]);
 
 export const messages = pgTable("messages", {
-	id: text().default(gen_random_uuid()).primaryKey().notNull(),
+	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	content: text(),
 	senderId: text("sender_id"),
 	receiverId: text("receiver_id"),
@@ -157,7 +157,7 @@ export const verification = pgTable("verification", {
 ]);
 
 export const storyReactions = pgTable("story_reactions", {
-	id: text().default(gen_random_uuid()).primaryKey().notNull(),
+	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	storyId: text("story_id"),
 	userId: text("user_id"),
 	reactionType: text("reaction_type").notNull(),
@@ -177,7 +177,3 @@ export const storyReactions = pgTable("story_reactions", {
 		}).onDelete("cascade"),
 	unique("story_reactions_unique_user_story").on(table.storyId, table.userId),
 ]);
-
-function gen_random_uuid(): string | import("drizzle-orm").SQL<unknown> {
-	throw new Error("Function not implemented.")
-}

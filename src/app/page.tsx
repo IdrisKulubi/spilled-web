@@ -1,7 +1,18 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { HeroSection, FeaturesSection, SafetySection, SupportSection, CTASection } from "@/components/landing";
 import { siteContent, metaData } from "@/lib/constants";
+import { auth } from "@/lib/auth";
+import { Footer } from "@/components/layout/Footer";
 
-export default function Home() {
+export default async function Home() {
+  // Check if user is signed in
+  const session  = await auth.api.getSession({ headers: await headers() });
+  
+  // If signed in, redirect to the authenticated home
+  if (session?.user) {
+    redirect("/home");
+  }
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -103,6 +114,8 @@ export default function Home() {
         <div id="cta">
           <CTASection content={siteContent.cta} />
         </div>
+                  <Footer />
+    
       </div>
     </>
   );

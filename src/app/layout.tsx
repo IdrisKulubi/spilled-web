@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "@/components/layout";
 import { metaData } from "@/lib/constants";
+import { NavBar } from "@/components/layout/NavBar";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,7 +101,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <a 
           href="#main-content" 
@@ -107,11 +109,13 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Header />
-        <main id="main-content" className="flex-1" role="main">
-          {children}
-        </main>
-        <Footer />
+        <div className="flex flex-col min-h-screen pt-0 sm:pt-12">
+          <NavBar/>
+          <main id="main-content" className="flex-1" role="main">
+            <Toaster/>
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

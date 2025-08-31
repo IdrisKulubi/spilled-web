@@ -9,7 +9,7 @@ interface CustomToastProps {
   type: ToastType;
   message: string;
   reactionType?: 'red_flag' | 'good_vibes' | 'unsure';
-  action?: 'added' | 'removed' | 'switched';
+  action?: 'added' | 'removed' | 'switched' | 'error';
 }
 
 const genZMessages = {

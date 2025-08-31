@@ -21,9 +21,9 @@ type ChatModalProps = {
 
 interface Message {
   id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
+  senderId: string | null;
+  receiverId: string | null;
+  content: string | null;
   createdAt: string;
   senderName: string | null;
   senderNickname: string | null;
@@ -74,7 +74,18 @@ export function ChatModal({ isOpen, onClose, recipientId, recipientName }: ChatM
       
       const result = await getConversation(recipientId);
       if (result.success) {
-        setMessages(result.data);
+        // Transform data to ensure required fields are properly typed
+        const transformedMessages: Message[] = result.data.map((msg: any) => ({
+          id: msg.id,
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+          content: msg.content,
+          createdAt: typeof msg.createdAt === 'string' ? msg.createdAt : msg.createdAt?.toISOString() || new Date().toISOString(),
+          senderName: msg.senderName,
+          senderNickname: msg.senderNickname,
+          senderImage: msg.senderImage,
+        }));
+        setMessages(transformedMessages);
       } else {
         setError(result.error || "Failed to load conversation");
       }
@@ -104,7 +115,7 @@ export function ChatModal({ isOpen, onClose, recipientId, recipientName }: ChatM
         // Add the new message to the list optimistically
         const newMsg: Message = {
           id: result.data.id || Date.now().toString(),
-          senderId: currentUser?.id || "",
+          senderId: currentUser?.id || null,
           receiverId: recipientId,
           content: messageContent,
           createdAt: new Date().toISOString(),

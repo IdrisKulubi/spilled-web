@@ -13,10 +13,14 @@ type Story = {
   imageUrl: string | null;
   tagType: "positive" | "negative" | "neutral" | null;
   createdAt: string;
+  createdByUserId: string | null;
   guyName: string | null;
   guyPhone: string | null;
   guyAge: number | null;
   guyLocation: string | null;
+  authorName: string | null;
+  authorNickname: string | null;
+  authorImage: string | null;
   reactions: {
     red_flag: number;
     good_vibes: number;

@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header, Footer } from "@/components/layout";
-import { metaData } from "@/lib/constants";
 import { NavBar } from "@/components/layout/NavBar";
 import { Toaster } from "sonner";
+import { constructMetadata } from "@/lib/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,74 +15,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(metaData.url),
-  title: {
-    default: metaData.title,
-    template: `%s | ${metaData.title}`,
-  },
-  description: metaData.description,
-  keywords: metaData.keywords,
-  authors: [{ name: metaData.author }],
-  creator: metaData.author,
-  publisher: metaData.author,
-  applicationName: "Spilled",
-  referrer: "origin-when-cross-origin",
+export const metadata: Metadata = constructMetadata();
 
-  robots: {
-    index: true,
-    follow: true,
-    nocache: false,
-    googleBot: {
-      index: true,
-      follow: true,
-      noimageindex: false,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    title: metaData.title,
-    description: metaData.description,
-    url: metaData.url,
-    siteName: metaData.title,
-    locale: "en_US",
-    type: "website",
-    images: [
-      {
-        url: `${metaData.url}/opengraph-image`,
-        width: 1200,
-        height: 630,
-        alt: metaData.title,
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: metaData.title,
-    description: metaData.description,
-    creator: "@spilledapp",
-    site: "@spilledapp",
-    images: [
-      {
-        url: `${metaData.url}/twitter-image`,
-        width: 1200,
-        height: 630,
-        alt: metaData.title,
-      },
-    ],
-  },
-  verification: {
-    google: "google-site-verification-code", // Replace with actual verification code
-    yandex: "yandex-verification-code", // Replace with actual verification code
-    yahoo: "yahoo-site-verification-code", // Replace with actual verification code
-  },
-  alternates: {
-    canonical: metaData.url,
-  },
-  category: "Safety",
-};
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -1,7 +1,5 @@
 "use client";
 
-import { AppStoreButton } from "@/components/ui/app-store-button";
-import { Shield } from "lucide-react";
 import type { CTASectionProps } from "@/lib/types";
 
 export function CTASection({ content, className }: CTASectionProps) {
@@ -14,13 +12,7 @@ export function CTASection({ content, className }: CTASectionProps) {
     >
       <div className="max-w-5xl mx-auto text-center">
         <div className="mb-6 sm:mb-8">
-          <div 
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
-            style={{ backgroundColor: '#D96BA0' }}
-            aria-hidden="true"
-          >
-            <Shield className="h-8 w-8 sm:h-10 sm:w-10" style={{ color: '#FFFFFF' }} />
-          </div>
+         
           <h2 
             id="cta-heading"
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-2"

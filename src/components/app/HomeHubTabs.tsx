@@ -46,7 +46,7 @@ export default function HomeHubTabs({ displayName, initialTab }: { displayName: 
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
-      <TabsList className="w-full flex items-center gap-2 overflow-x-auto md:flex-wrap md:overflow-visible">
+      <TabsList className="w-full flex items-center gap-2 md:flex-wrap">
         <TabsTrigger className="rounded-full" value="search">Search</TabsTrigger>
         <TabsTrigger className="rounded-full" value="share">Share</TabsTrigger>
         <TabsTrigger className="rounded-full" value="explore">Explore</TabsTrigger>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { HeroSection, FeaturesSection, SafetySection, SupportSection, CTASection } from "@/components/landing";
 import { siteContent, metaData } from "@/lib/constants";
 import { auth } from "@/lib/auth";
+import { Footer } from "@/components/layout/Footer";
 
 export default async function Home() {
   // Check if user is signed in
@@ -113,6 +114,8 @@ export default async function Home() {
         <div id="cta">
           <CTASection content={siteContent.cta} />
         </div>
+                  <Footer />
+    
       </div>
     </>
   );

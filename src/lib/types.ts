@@ -17,7 +17,7 @@ export interface Feature {
   id: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  iconName: string;
   status: 'available' | 'coming-soon';
 }
 
@@ -25,7 +25,7 @@ export interface Feature {
 export interface SafetyFeature {
   title: string;
   description: string;
-  icon: LucideIcon;
+  iconName: string;
 }
 
 // App store button types

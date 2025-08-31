@@ -8,6 +8,17 @@ import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 export type TagType = "red_flag" | "good_vibes" | "unsure";
 export type ReactionType = TagType;
 
+// Helper function to map database tag format to app format
+function mapDbTagToApp(dbTag: "positive" | "negative" | "neutral" | null): TagType {
+  if (!dbTag) return "unsure";
+  const mapping: Record<string, TagType> = {
+    "positive": "good_vibes",
+    "negative": "red_flag",
+    "neutral": "unsure"
+  };
+  return mapping[dbTag] || "unsure";
+}
+
 export interface StoryFeedItem {
   id: string;
   guy_id: string;
@@ -47,13 +58,11 @@ export async function fetchStoriesFeed(limit = 20, offset = 0) {
     .select({
       id: stories.id,
       guyId: stories.guyId,
-      userId: stories.userId,
-      text: stories.text,
-      tags: stories.tags,
+      userId: stories.createdByUserId,
+      text: stories.content,
+      tagType: stories.tagType,
       imageUrl: stories.imageUrl,
       createdAt: stories.createdAt,
-      anonymous: stories.anonymous,
-      nickname: stories.nickname,
       guyName: guys.name,
       guyPhone: guys.phone,
       guySocials: guys.socials,
@@ -75,11 +84,9 @@ export async function fetchStoriesFeed(limit = 20, offset = 0) {
     .select({
       id: comments.id,
       storyId: comments.storyId,
-      userId: comments.userId,
-      text: comments.text,
+      userId: comments.createdByUserId,
+      text: comments.content,
       createdAt: comments.createdAt,
-      anonymous: comments.anonymous,
-      nickname: comments.nickname,
     })
     .from(comments)
     .where(inArray(comments.storyId, storyIds));
@@ -103,20 +110,22 @@ export async function fetchStoriesFeed(limit = 20, offset = 0) {
   // Assemble
   const commentsByStory = new Map<string, StoryFeedItem["comments"]>();
   for (const c of commentRows) {
+    if (!c.storyId) continue; // Skip if storyId is null
     const arr = commentsByStory.get(c.storyId) || [];
     arr.push({
       id: c.id,
-      user_id: c.userId,
+      user_id: c.userId || "",
       text: c.text ?? "",
       created_at: c.createdAt?.toISOString?.() ?? new Date().toISOString(),
-      anonymous: !!c.anonymous,
-      nickname: c.nickname ?? null,
+      anonymous: true, // Default since not stored in current schema
+      nickname: null, // Default since not stored in current schema
     });
     commentsByStory.set(c.storyId, arr);
   }
 
   const reactionCounts = new Map<string, { red_flag: number; good_vibes: number; unsure: number; total: number }>();
   for (const r of reactionRows) {
+    if (!r.storyId) continue; // Skip if storyId is null
     const counts = reactionCounts.get(r.storyId) || { red_flag: 0, good_vibes: 0, unsure: 0, total: 0 };
     counts[r.reactionType as ReactionType]++;
     counts.total++;
@@ -135,11 +144,11 @@ export async function fetchStoriesFeed(limit = 20, offset = 0) {
     guy_age: b.guyAge ?? undefined,
     user_id: b.userId!,
     text: b.text ?? "",
-    tags: (b.tags as TagType[]) || [],
+    tags: b.tagType ? [mapDbTagToApp(b.tagType as "positive" | "negative" | "neutral")] : [],
     image_url: b.imageUrl ?? undefined,
     created_at: b.createdAt?.toISOString?.() ?? new Date().toISOString(),
-    anonymous: !!b.anonymous,
-    nickname: b.nickname ?? undefined,
+    anonymous: true, // Default since not stored in current schema
+    nickname: undefined, // Default since not stored in current schema
     comments: commentsByStory.get(b.id) || [],
     comment_count: (commentsByStory.get(b.id) || []).length,
     reactions: reactionCounts.get(b.id) || { red_flag: 0, good_vibes: 0, unsure: 0, total: 0 },
@@ -195,16 +204,24 @@ export async function addPost(input: {
     guyId = inserted[0].id;
   }
 
+  // Map tags from mobile format to database format
+  const tagMapping: Record<string, "positive" | "negative" | "neutral"> = {
+    "good_vibes": "positive",
+    "red_flag": "negative", 
+    "unsure": "neutral"
+  };
+  
+  // Use the first tag for now (database expects single tag, not array)
+  const dbTag = tagMapping[input.tags[0]] || "neutral";
+
   const insertedStory = await db
     .insert(stories)
     .values({
       guyId,
-      userId: session.user.id,
-      text: input.storyText.trim(),
-      tags: input.tags as any,
+      createdByUserId: session.user.id,
+      content: input.storyText.trim(),
+      tagType: dbTag,
       imageUrl: input.imageUrl ?? null,
-      anonymous: input.anonymous,
-      nickname: input.anonymous ? null : input.nickname ?? null,
     })
     .returning({ id: stories.id });
 
@@ -261,14 +278,20 @@ export async function updateStory(storyId: string, data: {
   const owner = await db.select({ userId: stories.createdByUserId }).from(stories).where(eq(stories.id, storyId)).limit(1);
   if (!owner[0] || owner[0].userId !== session.user.id) throw new Error("You can only edit your own stories");
 
-  // Use the first tag as tagType (since the schema only supports one tag)
-  const tagType = data.tags.length > 0 ? data.tags[0] : null;
+  // Map tags from mobile format to database format
+  const tagMapping: Record<string, "positive" | "negative" | "neutral"> = {
+    "good_vibes": "positive",
+    "red_flag": "negative", 
+    "unsure": "neutral"
+  };
+  
+  const dbTag = tagMapping[data.tags[0]] || "neutral";
 
   await db
     .update(stories)
     .set({
       content: data.storyText,
-      tagType: tagType,
+      tagType: dbTag,
       imageUrl: data.imageUrl ?? null,
     })
     .where(eq(stories.id, storyId));
@@ -318,11 +341,9 @@ export async function listComments(storyId: string) {
   const rows = await db
     .select({
       id: comments.id,
-      userId: comments.userId,
-      text: comments.text,
+      userId: comments.createdByUserId,
+      text: comments.content,
       createdAt: comments.createdAt,
-      anonymous: comments.anonymous,
-      nickname: comments.nickname,
     })
     .from(comments)
     .where(eq(comments.storyId, storyId))
@@ -330,11 +351,11 @@ export async function listComments(storyId: string) {
 
   return rows.map((c) => ({
     id: c.id,
-    user_id: c.userId,
+    user_id: c.userId || "",
     text: c.text ?? "",
     created_at: c.createdAt?.toISOString?.() ?? new Date().toISOString(),
-    anonymous: !!c.anonymous,
-    nickname: c.nickname ?? null,
+    anonymous: true, // Default since not stored in current schema
+    nickname: null, // Default since not stored in current schema
   }));
 }
 
@@ -347,10 +368,8 @@ export async function addComment(storyId: string, textBody: string, anonymous = 
     .insert(comments)
     .values({
       storyId,
-      userId: session.user.id,
-      text: textBody.trim(),
-      anonymous,
-      nickname: anonymous ? null : nickname ?? null,
+      createdByUserId: session.user.id,
+      content: textBody.trim(),
     })
     .returning({ id: comments.id });
 

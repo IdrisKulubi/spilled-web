@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
 import { navigation } from "@/lib/constants";
+import { signOut } from "@/lib/actions/signOut";
 
 export function NavBar() {
   const router = useRouter();
@@ -57,8 +58,9 @@ export function NavBar() {
 
   const handleSignOut = async () => {
     try {
-      await authClient.signOut();
-      router.push("/");
+      await signOut();
+      // Force a hard refresh to ensure session is cleared on both client and server
+      window.location.href = "/";
     } catch (e) {
       console.error("Sign out failed", e);
     }

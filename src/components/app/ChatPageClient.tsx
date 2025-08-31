@@ -24,9 +24,9 @@ interface Conversation {
 
 interface Message {
   id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
+  senderId: string | null;
+  receiverId: string | null;
+  content: string | null;
   createdAt: string;
   senderName: string | null;
   senderNickname: string | null;
@@ -87,7 +87,18 @@ export function ChatPageClient() {
       setLoadingMessages(true);
       const result = await getConversation(otherUserId);
       if (result.success) {
-        setMessages(result.data);
+        // Transform data to ensure required fields are properly typed
+        const transformedMessages: Message[] = result.data.map((msg: any) => ({
+          id: msg.id,
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+          content: msg.content,
+          createdAt: typeof msg.createdAt === 'string' ? msg.createdAt : msg.createdAt?.toISOString() || new Date().toISOString(),
+          senderName: msg.senderName,
+          senderNickname: msg.senderNickname,
+          senderImage: msg.senderImage,
+        }));
+        setMessages(transformedMessages);
       } else {
         toast.error("Failed to load messages");
       }
@@ -118,7 +129,7 @@ export function ChatPageClient() {
         // Add the new message to the list optimistically
         const newMsg: Message = {
           id: result.data.id || Date.now().toString(),
-          senderId: currentUser?.id || "",
+          senderId: currentUser?.id || null,
           receiverId: selectedConversation.userId,
           content: messageContent,
           createdAt: new Date().toISOString(),

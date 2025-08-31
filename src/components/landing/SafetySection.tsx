@@ -1,6 +1,22 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+"use client";
+
+import { SafetyCometCards } from "@/components/ui/safety-comet-cards";
 import type { SafetySectionProps } from "@/lib/types";
+import { Shield, Users, MessageSquare, CheckCircle, Search, AlertTriangle, FileText, Eye, UserCheck, Lock, LucideIcon } from "lucide-react";
+
+// Icon mapping to avoid serialization issues
+const iconMap: Record<string, LucideIcon> = {
+  CheckCircle,
+  Search,
+  AlertTriangle,
+  FileText,
+  Eye,
+  Shield,
+  UserCheck,
+  Users,
+  MessageSquare,
+  Lock,
+};
 
 export function SafetySection({ content, className }: SafetySectionProps) {
   return (
@@ -27,76 +43,8 @@ export function SafetySection({ content, className }: SafetySectionProps) {
           </p>
         </div>
         
-        <div 
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10"
-          role="list"
-          aria-label="Safety features"
-        >
-          {content.features.map((feature, index) => {
-            const IconComponent = feature.icon;
-            
-            return (
-              <Card 
-                key={index}
-                className="relative rounded-2xl shadow-lg transition-all duration-200 hover:scale-[0.98] border-0 group focus-within:ring-2 focus-within:ring-pink-500 focus-within:ring-offset-2"
-                style={{ 
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 4px 20px rgba(217, 107, 160, 0.1)'
-                }}
-                role="listitem"
-                tabIndex={0}
-                aria-labelledby={`safety-${index}-title`}
-                aria-describedby={`safety-${index}-description`}
-              >
-                <div 
-                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  style={{ backgroundColor: 'rgba(253, 236, 239, 0.3)' }}
-                  aria-hidden="true"
-                />
-                <CardHeader className="pb-3 sm:pb-4 relative z-10">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div 
-                      className="p-2 sm:p-3 rounded-lg"
-                      style={{ 
-                        backgroundColor: '#D96BA0',
-                        color: '#FFFFFF'
-                      }}
-                      aria-hidden="true"
-                    >
-                      <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
-                    </div>
-                    <Badge 
-                      variant="secondary"
-                      className="text-xs font-medium rounded-lg px-2 sm:px-3 py-1 shrink-0"
-                      style={{
-                        backgroundColor: '#76C893',
-                        color: '#FFFFFF'
-                      }}
-                      aria-label="Security status: Secure"
-                    >
-                      Secure
-                    </Badge>
-                  </div>
-                  <CardTitle 
-                    id={`safety-${index}-title`}
-                    className="text-lg sm:text-xl font-semibold leading-tight"
-                    style={{ color: '#3B3B3B' }}
-                  >
-                    {feature.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 pt-0">
-                  <CardDescription 
-                    id={`safety-${index}-description`}
-                    className="text-sm sm:text-base leading-relaxed"
-                    style={{ color: '#3B3B3B' }}
-                  >
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div role="list" aria-label="Safety features">
+          <SafetyCometCards features={content.features} />
         </div>
         
         {/* Trust indicators */}
@@ -106,10 +54,7 @@ export function SafetySection({ content, className }: SafetySectionProps) {
             style={{ backgroundColor: '#FDECEF' }}
           >
             <div className="flex items-center">
-              <div 
-                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
+              
               <span 
                 className="text-xs sm:text-sm font-medium whitespace-nowrap"
                 style={{ color: '#3B3B3B' }}
@@ -118,10 +63,7 @@ export function SafetySection({ content, className }: SafetySectionProps) {
               </span>
             </div>
             <div className="flex items-center">
-              <div 
-                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
+            
               <span 
                 className="text-xs sm:text-sm font-medium whitespace-nowrap"
                 style={{ color: '#3B3B3B' }}
@@ -130,10 +72,7 @@ export function SafetySection({ content, className }: SafetySectionProps) {
               </span>
             </div>
             <div className="flex items-center">
-              <div 
-                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2"
-                style={{ backgroundColor: '#76C893' }}
-              ></div>
+            
               <span 
                 className="text-xs sm:text-sm font-medium whitespace-nowrap"
                 style={{ color: '#3B3B3B' }}

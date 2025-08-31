@@ -215,7 +215,7 @@ export function EditStoryModal({ isOpen, onClose, storyId, onStoryUpdated }: Edi
                 <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
                   <img
                     src={imageUrl}
-                    alt="Story preview"
+                    alt="Story preview image"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "";

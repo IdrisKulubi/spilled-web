@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { signOut } from "@/lib/actions/signOut";
 
 export default function ProfileDropdown() {
   const router = useRouter();
@@ -14,8 +14,13 @@ export default function ProfileDropdown() {
   };
 
   const onSignOut = async () => {
-    await authClient.signOut();
-    router.push("/");
+    try {
+      await signOut();
+      // Force a hard refresh to ensure session is cleared on both client and server
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    }
   };
 
   return (

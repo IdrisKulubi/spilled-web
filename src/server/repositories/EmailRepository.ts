@@ -50,11 +50,13 @@ export class EmailRepository {
     return rows.filter((r) => r.batch != null);
   }
 
-  async getEmailsByBatch(batch: string) {
+  async getEmailsByBatch(batch: number | string) {
+    const batchNumber = typeof batch === 'string' ? Number(batch) : batch;
+    if (Number.isNaN(batchNumber)) return [];
     return await db
       .select()
       .from(emailList)
-      .where(eq(emailList.batch, batch))
+      .where(eq(emailList.batch, batchNumber))
       .orderBy(desc(emailList.createdAt));
   }
 

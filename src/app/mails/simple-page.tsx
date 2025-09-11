@@ -23,6 +23,7 @@ interface EmailEntry {
   id: string;
   email: string;
   name?: string;
+  batch?: string;
   status?: string;
   sentCount?: number;
   createdAt: string;
@@ -36,6 +37,8 @@ export default function SimpleEmailDashboard() {
   const [importText, setImportText] = useState('');
   const [sending, setSending] = useState(false);
   const [stats, setStats] = useState<any>({});
+  const [batches, setBatches] = useState<Array<{ batch: string; total: number; sent: number }>>([]);
+  const [activeBatch, setActiveBatch] = useState<string | 'ALL'>('ALL');
 
   // Fetch emails
   const fetchEmails = async () => {
@@ -47,6 +50,7 @@ export default function SimpleEmailDashboard() {
       if (response.ok) {
         setEmails(data.emails || []);
         setStats(data.stats || {});
+        setBatches(data.batches || []);
       } else {
         toast({
           title: "Error",
@@ -149,13 +153,25 @@ export default function SimpleEmailDashboard() {
 
   // Handle sending campaign
   const handleSendCampaign = async () => {
-    if (selectedEmails.size === 0) {
-      toast({ title: 'Nothing selected', description: 'Please select at least one email.' });
+    // If batch filter is active, limit sends to that batch only
+    const idsToSend = Array.from(selectedEmails);
+    if (activeBatch !== 'ALL') {
+      // keep only ids in the active batch
+      const allowed = new Set(
+        emails.filter((e) => e.batch === activeBatch).map((e) => e.id)
+      );
+      for (let i = idsToSend.length - 1; i >= 0; i--) {
+        if (!allowed.has(idsToSend[i])) idsToSend.splice(i, 1);
+      }
+    }
+
+    if (idsToSend.length === 0) {
+      toast({ title: 'Nothing selected', description: 'Select at least one email (or switch batch).' });
       return;
     }
 
     // UX feedback immediately
-    toast({ title: 'Sending…', description: `Sending ${selectedEmails.size} invite(s)…` });
+    toast({ title: 'Sending…', description: `Sending ${idsToSend.length} invite(s)…` });
     if (selectedEmails.size === 0) {
       toast({
         title: "Error",
@@ -172,8 +188,8 @@ export default function SimpleEmailDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: `Campaign ${new Date().toLocaleDateString()}`,
-          emailIds: Array.from(selectedEmails),
+          name: `Batch ${activeBatch === 'ALL' ? 'Mixed' : activeBatch} • ${new Date().toLocaleDateString()}`,
+          emailIds: idsToSend,
           batchSize: 50,
           dryRun: false,
         }),
@@ -400,19 +416,38 @@ email3@example.com"
             <CardDescription>Select emails and send (batches of 50)</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Button type="button" onClick={selectAll} variant="outline" size="sm">
-                Select All ({emails.length})
-              </Button>
-              <Button type="button" onClick={deselectAll} variant="outline" size="sm">
-                Deselect All
-              </Button>
-              <Button type="button" onClick={fetchEmails} variant="outline" size="sm" disabled={loading}>
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
-              <div className="ml-auto text-sm text-muted-foreground self-center">
-                {selectedEmails.size} selected
+            {/* Action Bar */}
+            <div className="flex flex-wrap gap-2 mb-4 items-center">
+              <div className="flex gap-2">
+                <Button type="button" onClick={selectAll} variant="outline" size="sm">
+                  Select All ({emails.length})
+                </Button>
+                <Button type="button" onClick={deselectAll} variant="outline" size="sm">
+                  Deselect All
+                </Button>
+                <Button type="button" onClick={fetchEmails} variant="outline" size="sm" disabled={loading}>
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+
+              {/* Batches */}
+              <div className="flex gap-2 ml-auto items-center">
+                <span className="text-sm text-muted-foreground">Batch:</span>
+                <select
+                  value={activeBatch}
+                  onChange={(e) => setActiveBatch(e.target.value as any)}
+                  className="px-2 py-1 border rounded-md text-sm"
+                >
+                  <option value="ALL">ALL</option>
+                  {batches?.map((b) => (
+                    <option key={b.batch} value={b.batch}>
+                      {b.batch} • {b.sent}/{b.total} sent
+                    </option>
+                  ))}
+                </select>
+                <div className="text-sm text-muted-foreground">
+                  {selectedEmails.size} selected
+                </div>
               </div>
             </div>
 
@@ -431,7 +466,7 @@ email3@example.com"
                 </div>
               ) : (
                 <div className="divide-y">
-                  {emails.map((email) => (
+                  {(activeBatch === 'ALL' ? emails : emails.filter(e => e.batch === activeBatch)).map((email) => (
                     <div 
                       key={email.id} 
                       className="flex items-center gap-3 p-3 hover:bg-gray-50"

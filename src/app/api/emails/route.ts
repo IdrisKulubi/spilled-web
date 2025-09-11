@@ -27,8 +27,9 @@ export async function GET(request: NextRequest) {
     }
 
     const stats = await emailRepository.getEmailStats();
+    const batches = await emailRepository.getBatches();
 
-    return NextResponse.json({ emails, stats });
+    return NextResponse.json({ emails, stats, batches });
   } catch (error: any) {
     console.error('Error fetching emails:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

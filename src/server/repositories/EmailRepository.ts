@@ -35,6 +35,29 @@ export class EmailRepository {
       .orderBy(desc(emailList.createdAt));
   }
 
+  async getBatches() {
+    // Returns list of batches with counts and sent stats
+    const rows = await db
+      .select({
+        batch: emailList.batch,
+        total: sql<number>`count(*)`,
+        sent: sql<number>`sum(case when ${emailList.sentCount} > 0 then 1 else 0 end)`,
+      })
+      .from(emailList)
+      .groupBy(emailList.batch)
+      .orderBy(emailList.batch);
+
+    return rows.filter((r) => r.batch != null);
+  }
+
+  async getEmailsByBatch(batch: string) {
+    return await db
+      .select()
+      .from(emailList)
+      .where(eq(emailList.batch, batch))
+      .orderBy(desc(emailList.createdAt));
+  }
+
   async getEmailById(id: string) {
     const results = await db
       .select()
@@ -85,8 +108,16 @@ export class EmailRepository {
       errors: [] as string[],
     };
 
+    // Fetch counts to auto-assign batches of 50 (A, B, C...)
+    const existingAll = await this.getAllEmails(10_000, 0);
+    const currentCount = existingAll.length;
+
+    let globalIndex = currentCount; // start after existing rows
+
+    const batchLetter = (n: number) => String.fromCharCode("A".charCodeAt(0) + Math.floor(n / 50));
+
     for (const entry of emails) {
-      const email = entry.email.toLowerCase().trim();
+      const email = (entry.email || '').toLowerCase().trim();
       
       // Validate email format
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -101,6 +132,7 @@ export class EmailRepository {
       }
 
       try {
+        const batch = batchLetter(globalIndex);
         const [result] = await db
           .insert(emailList)
           .values({
@@ -109,9 +141,11 @@ export class EmailRepository {
             addedBy,
             status: 'pending',
             sentCount: 0,
+            batch,
           })
           .returning();
         results.added.push(result);
+        globalIndex += 1;
       } catch (error) {
         results.errors.push(email);
       }

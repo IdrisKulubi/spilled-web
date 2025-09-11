@@ -134,6 +134,7 @@ export const emailList = pgTable("email_list", {
   email: text("email").notNull().unique(),
   name: text("name"),
   status: text("status").default("pending"), // pending, sent, failed, bounced, unsubscribed
+  batch: text("batch"), // e.g. A, B, C... used for 50-sized groups
   lastSentAt: timestamp("last_sent_at"),
   sentCount: integer("sent_count").default(0),
   tags: text("tags"), // JSON array of tags

@@ -16,12 +16,14 @@ import {
 
 interface OnboardingEmailProps {
   recipientEmail?: string;
+  recipientName?: string;
   previewText?: string;
 }
 
 export const OnboardingEmail: React.FC<OnboardingEmailProps> = ({
   recipientEmail = '',
-  previewText = "The tea is hot ☕… and it’s only for you 💕",
+  recipientName = '',
+  previewText = "The tea is hot ☕… and it's only for you 💕",
 }) => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spilledforwomen.com';
 
@@ -47,12 +49,26 @@ export const OnboardingEmail: React.FC<OnboardingEmailProps> = ({
             <Heading style={h1}>💌 The Tea is Hot, Bestie…</Heading>
             
             <Text style={paragraph}>
-              Psst… hey bestie 👀  
-              We noticed something. While StrathSpace was fun, you deserve a space that’s <strong>truly yours</strong>.
+              Psst… hey {(() => {
+                // First try to use the provided name
+                if (recipientName) {
+                  const firstName = recipientName.trim().split(' ')[0];
+                  if (firstName) {
+                    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                  }
+                }
+                // Fallback to email parsing
+                const local = recipientEmail ? decodeURIComponent(recipientEmail) : '';
+                const firstPart = local ? local.split('@')[0].split(/[._\-+]/)[0] : '';
+                return firstPart
+                  ? firstPart.charAt(0).toUpperCase() + firstPart.slice(1).toLowerCase()
+                  : 'Bestie';
+              })()} 👀{' '}
+              We noticed something. While StrathSpace was fun, you deserve a space that's <strong>truly yours</strong>.
             </Text>
 
             <Text style={paragraph}>
-              That’s why we built <strong>Spilled</strong> — a safe, private, invite-only circle where African women can share dating stories, swap advice, and always look out for each other 💕
+              That’s why we built <strong>Spilled</strong>  a safe, private, invite-only circle where  women can share dating stories, swap advice, and always look out for each other 💕
             </Text>
 
             {/* Highlight Invite Box */}

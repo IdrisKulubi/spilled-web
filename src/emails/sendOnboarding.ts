@@ -51,16 +51,21 @@ function sanitizeEmails(emails: string[]): string[] {
  */
 async function sendSingleEmail(
   to: string,
+  name?: string,
   options?: SendOnboardingOptions
 ): Promise<EmailResult> {
   try {
     // Render the email template
     const html = await render(
-      React.createElement(OnboardingEmail),
+      React.createElement(OnboardingEmail, {
+        recipientEmail: to,
+        recipientName: name || ''
+      }),
       { pretty: true }
     );
 
-    const text = `Hey bestie! 👋
+    const firstName = name ? name.trim().split(' ')[0] : 'bestie';
+    const text = `Hey ${firstName}! 👋
 
 You're invited to join Spilled - a safe, private community for women to share dating experiences.
 
@@ -128,11 +133,26 @@ The Spilled Team 💕`;
  * - Comprehensive error handling
  */
 export async function sendOnboardingEmails(
-  emails: string[],
+  emails: Array<string | { email: string; name?: string }>,
   options?: SendOnboardingOptions
 ): Promise<BatchEmailResult> {
+  // Normalize input and extract emails and names
+  const normalizedRecipients = emails.map(e => {
+    if (typeof e === 'string') {
+      return { email: e, name: undefined };
+    }
+    return e;
+  });
+  
   // Validate and sanitize emails
-  const recipients = sanitizeEmails(emails);
+  const emailAddresses = normalizedRecipients.map(r => r.email);
+  const sanitizedEmails = sanitizeEmails(emailAddresses);
+  
+  // Match sanitized emails back to their names
+  const recipients = sanitizedEmails.map(email => {
+    const original = normalizedRecipients.find(r => r.email.toLowerCase() === email);
+    return { email, name: original?.name };
+  });
   
   if (recipients.length === 0) {
     console.warn('⚠️ No valid emails to send');
@@ -158,14 +178,14 @@ export async function sendOnboardingEmails(
   // Process emails in batches
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, Math.min(i + batchSize, recipients.length));
-    const batchPromises = batch.map(async (to, index) => {
+    const batchPromises = batch.map(async (recipient, index) => {
       const currentIndex = i + index + 1;
       
       // Call progress callback
-      options?.onProgress?.(currentIndex, recipients.length, to);
+      options?.onProgress?.(currentIndex, recipients.length, recipient.email);
       
       // Send email
-      const result = await sendSingleEmail(to, options);
+      const result = await sendSingleEmail(recipient.email, recipient.name, options);
       
       // Apply rate limiting between emails in the same batch
       if (index < batch.length - 1) {
@@ -225,6 +245,6 @@ export async function sendSingleOnboardingEmail(
     };
   }
   
-  return sendSingleEmail(sanitized[0], options);
+  return sendSingleEmail(sanitized[0], undefined, options);
 }
 

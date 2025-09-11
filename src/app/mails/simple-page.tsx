@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,7 @@ interface EmailEntry {
   id: string;
   email: string;
   name?: string;
-  batch?: string;
+  batch?: number;
   status?: string;
   sentCount?: number;
   createdAt: string;
@@ -37,11 +37,10 @@ export default function SimpleEmailDashboard() {
   const [importText, setImportText] = useState('');
   const [sending, setSending] = useState(false);
   const [stats, setStats] = useState<any>({});
-  const [batches, setBatches] = useState<Array<{ batch: string; total: number; sent: number }>>([]);
+  const [batches, setBatches] = useState<Record<number, EmailEntry[]>>({});
   const [activeBatch, setActiveBatch] = useState<string | 'ALL'>('ALL');
 
-  // Fetch emails
-  const fetchEmails = async () => {
+  const fetchEmails = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/emails');
@@ -50,7 +49,6 @@ export default function SimpleEmailDashboard() {
       if (response.ok) {
         setEmails(data.emails || []);
         setStats(data.stats || {});
-        setBatches(data.batches || []);
       } else {
         toast({
           title: "Error",
@@ -67,13 +65,57 @@ export default function SimpleEmailDashboard() {
     } finally {
       setLoading(false);
     }
+  }, [toast]);
+
+  const fetchBatches = async () => {
+    try {
+      const response = await fetch('/api/emails/assign-batches');
+      const data = await response.json();
+      if (response.ok) {
+        setBatches(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch batches:", error);
+    }
   };
 
   useEffect(() => {
     fetchEmails();
-  }, []);
+    fetchBatches();
+  }, [fetchEmails]);
 
-  // Handle bulk import
+  const handleCreateBatches = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/emails/assign-batches', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: data.message,
+        });
+        fetchEmails();
+        fetchBatches();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to create batches",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create batches",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBulkImport = async () => {
     if (!importText.trim()) {
       toast({
@@ -129,7 +171,6 @@ export default function SimpleEmailDashboard() {
           });
         }
         
-        // Always refresh the list
         await fetchEmails();
       } else {
         console.error('API Error:', data);
@@ -151,14 +192,11 @@ export default function SimpleEmailDashboard() {
     }
   };
 
-  // Handle sending campaign
   const handleSendCampaign = async () => {
-    // If batch filter is active, limit sends to that batch only
     const idsToSend = Array.from(selectedEmails);
     if (activeBatch !== 'ALL') {
-      // keep only ids in the active batch
       const allowed = new Set(
-        emails.filter((e) => e.batch === activeBatch).map((e) => e.id)
+        emails.filter((e) => e.batch === Number(activeBatch)).map((e) => e.id)
       );
       for (let i = idsToSend.length - 1; i >= 0; i--) {
         if (!allowed.has(idsToSend[i])) idsToSend.splice(i, 1);
@@ -170,7 +208,6 @@ export default function SimpleEmailDashboard() {
       return;
     }
 
-    // UX feedback immediately
     toast({ title: 'Sending…', description: `Sending ${idsToSend.length} invite(s)…` });
     if (selectedEmails.size === 0) {
       toast({
@@ -222,7 +259,6 @@ export default function SimpleEmailDashboard() {
     }
   };
 
-  // Handle delete
   const handleDelete = async () => {
     if (selectedEmails.size === 0) return;
 
@@ -257,7 +293,6 @@ export default function SimpleEmailDashboard() {
     }
   };
 
-  // Toggle email selection
   const toggleEmailSelection = (id: string) => {
     const newSelection = new Set(selectedEmails);
     if (newSelection.has(id)) {
@@ -269,7 +304,12 @@ export default function SimpleEmailDashboard() {
   };
 
   const selectAll = () => {
-    setSelectedEmails(new Set(emails.map(e => e.id)));
+    if (activeBatch === 'ALL') {
+      setSelectedEmails(new Set(emails.map(e => e.id)));
+    } else {
+      const batchEmails = emails.filter(e => e.batch === Number(activeBatch));
+      setSelectedEmails(new Set(batchEmails.map(e => e.id)));
+    }
   };
 
   const deselectAll = () => {
@@ -289,13 +329,11 @@ export default function SimpleEmailDashboard() {
 
   return (
     <div className="container mx-auto py-6 max-w-7xl">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-pink-600 mb-2">✨ Spilled Email Manager</h1>
         <p className="text-gray-600">Send invites to join Spilled - The gossip app for queens 👑</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardContent className="p-4">
@@ -344,7 +382,6 @@ export default function SimpleEmailDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Add Emails Section */}
         <Card className="border border-zinc-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -406,7 +443,6 @@ email3@example.com"
           </CardContent>
         </Card>
 
-        {/* Send Emails Section */}
         <Card className="border border-zinc-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -416,21 +452,22 @@ email3@example.com"
             <CardDescription>Select emails and send (batches of 50)</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            {/* Action Bar */}
             <div className="flex flex-wrap gap-2 mb-4 items-center">
               <div className="flex gap-2">
                 <Button type="button" onClick={selectAll} variant="outline" size="sm">
-                  Select All ({emails.length})
+                  Select All ({activeBatch === 'ALL' ? emails.length : emails.filter(e => e.batch === Number(activeBatch)).length})
                 </Button>
                 <Button type="button" onClick={deselectAll} variant="outline" size="sm">
                   Deselect All
                 </Button>
-                <Button type="button" onClick={fetchEmails} variant="outline" size="sm" disabled={loading}>
+                <Button type="button" onClick={() => { fetchEmails(); fetchBatches(); }} variant="outline" size="sm" disabled={loading}>
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button type="button" onClick={handleCreateBatches} variant="outline" size="sm" disabled={loading}>
+                  Create Batches
                 </Button>
               </div>
 
-              {/* Batches */}
               <div className="flex gap-2 ml-auto items-center">
                 <span className="text-sm text-muted-foreground">Batch:</span>
                 <select
@@ -439,9 +476,9 @@ email3@example.com"
                   className="px-2 py-1 border rounded-md text-sm"
                 >
                   <option value="ALL">ALL</option>
-                  {batches?.map((b) => (
-                    <option key={b.batch} value={b.batch}>
-                      {b.batch} • {b.sent}/{b.total} sent
+                  {Object.keys(batches).map((batchNumber) => (
+                    <option key={batchNumber} value={batchNumber}>
+                      Batch {batchNumber}
                     </option>
                   ))}
                 </select>
@@ -449,51 +486,68 @@ email3@example.com"
                   {selectedEmails.size} selected
                 </div>
               </div>
-            </div>
 
             {/* Email List */}
-            <div className="max-h-64 overflow-y-auto border-2 border-gray-200 rounded-lg mb-4">
-              {loading && emails.length === 0 ? (
-                <div className="p-8 text-center">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-500" />
-                  <p className="text-gray-500">Loading emails...</p>
-                </div>
-              ) : emails.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <Mail className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p className="font-semibold">No emails in database yet</p>
-                  <p className="text-sm mt-1">Add some emails on the left 👈</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {(activeBatch === 'ALL' ? emails : emails.filter(e => e.batch === activeBatch)).map((email) => (
-                    <div 
-                      key={email.id} 
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50"
-                    >
-                      <Checkbox
-                        checked={selectedEmails.has(email.id)}
-                        onCheckedChange={() => toggleEmailSelection(email.id)}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{email.email}</p>
-                        {email.name && (
-                          <p className="text-xs text-gray-500">{email.name}</p>
-                        )}
+            <div className="border-2 border-gray-200 rounded-lg mb-4">
+              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">
+                  {activeBatch === 'ALL' 
+                    ? `All Emails (${emails.length})`
+                    : `Batch ${activeBatch} (${emails.filter(e => e.batch === Number(activeBatch)).length} emails)`
+                  }
+                </p>
+              </div>
+              <div className="h-96 overflow-y-auto">
+                {loading && emails.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-purple-500" />
+                    <p className="text-gray-500">Loading emails...</p>
+                  </div>
+                ) : emails.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <Mail className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p className="font-semibold">No emails in database yet</p>
+                    <p className="text-sm mt-1">Add some emails on the left 👈</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {(activeBatch === 'ALL' ? emails : emails.filter(e => e.batch === Number(activeBatch))).map((email) => (
+                      <div 
+                        key={email.id} 
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <Checkbox
+                          checked={selectedEmails.has(email.id)}
+                          onCheckedChange={() => toggleEmailSelection(email.id)}
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{email.email}</p>
+                          {email.name && (
+                            <p className="text-xs text-gray-500 truncate">{email.name}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {email.batch && (
+                            <Badge variant="outline" className="text-xs">
+                              Batch {email.batch}
+                            </Badge>
+                          )}
+                          {getStatusIcon(email.status)}
+                          {(email.sentCount ?? 0) > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {email.sentCount}x
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      {getStatusIcon(email.status)}
-                      {(email.sentCount ?? 0) > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          Sent {email.sentCount ?? 0}x
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             </div>
 
-            {/* Sticky action bar */}
             <div className="sticky bottom-0 left-0 right-0 z-20 mt-4 border-t bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-3 rounded-b-md pointer-events-auto">
               <div className="flex items-center gap-2">
                 <div className="text-sm text-muted-foreground flex-1">

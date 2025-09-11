@@ -108,18 +108,9 @@ export class EmailRepository {
       errors: [] as string[],
     };
 
-    // Fetch counts to auto-assign batches of 50 (A, B, C...)
-    const existingAll = await this.getAllEmails(10_000, 0);
-    const currentCount = existingAll.length;
-
-    let globalIndex = currentCount; // start after existing rows
-
-    const batchLetter = (n: number) => String.fromCharCode("A".charCodeAt(0) + Math.floor(n / 50));
-
     for (const entry of emails) {
       const email = (entry.email || '').toLowerCase().trim();
       
-      // Validate email format
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         results.errors.push(email);
         continue;
@@ -132,7 +123,6 @@ export class EmailRepository {
       }
 
       try {
-        const batch = batchLetter(globalIndex);
         const [result] = await db
           .insert(emailList)
           .values({
@@ -141,11 +131,9 @@ export class EmailRepository {
             addedBy,
             status: 'pending',
             sentCount: 0,
-            batch,
           })
           .returning();
         results.added.push(result);
-        globalIndex += 1;
       } catch (error) {
         results.errors.push(email);
       }

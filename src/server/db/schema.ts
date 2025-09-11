@@ -128,6 +128,51 @@ export const storyReactions = pgTable("story_reactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Email list table for managing onboarding emails
+export const emailList = pgTable("email_list", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  status: text("status").default("pending"), // pending, sent, failed, bounced, unsubscribed
+  batch: integer("batch"), // e.g. 1, 2, 3... used for 50-sized groups
+  lastSentAt: timestamp("last_sent_at"),
+  sentCount: integer("sent_count").default(0),
+  tags: text("tags"), // JSON array of tags
+  notes: text("notes"),
+  addedBy: text("added_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Email campaigns table for tracking bulk sends
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  template: text("template").default("onboarding"),
+  totalEmails: integer("total_emails").default(0),
+  sentEmails: integer("sent_emails").default(0),
+  failedEmails: integer("failed_emails").default(0),
+  status: text("status").default("draft"), // draft, sending, completed, failed
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Email campaign recipients - tracks individual sends
+export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: text("campaign_id").references(() => emailCampaigns.id).notNull(),
+  emailId: text("email_id").references(() => emailList.id).notNull(),
+  status: text("status").default("pending"), // pending, sent, failed
+  messageId: text("message_id"),
+  error: text("error"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -141,4 +186,10 @@ export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
 export type StoryReaction = typeof storyReactions.$inferSelect;
 export type InsertStoryReaction = typeof storyReactions.$inferInsert;
+export type EmailListEntry = typeof emailList.$inferSelect;
+export type InsertEmailListEntry = typeof emailList.$inferInsert;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+export type InsertEmailCampaign = typeof emailCampaigns.$inferInsert;
+export type EmailCampaignRecipient = typeof emailCampaignRecipients.$inferSelect;
+export type InsertEmailCampaignRecipient = typeof emailCampaignRecipients.$inferInsert;
 

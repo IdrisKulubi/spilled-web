@@ -62,9 +62,12 @@ export async function POST(request: NextRequest) {
       await emailRepository.addCampaignRecipient(campaign.id, entry!.id);
     }
 
-    // Send emails
-    const addresses = validEmails.map((e) => e!.email as string);
-    const result = await sendOnboardingEmails(addresses, {
+    // Send emails with names
+    const recipientsWithNames = validEmails.map((e) => ({
+      email: e!.email as string,
+      name: e!.name || undefined
+    }));
+    const result = await sendOnboardingEmails(recipientsWithNames, {
       batchSize,
       dryRun,
       onSuccess: async (email, messageId) => {

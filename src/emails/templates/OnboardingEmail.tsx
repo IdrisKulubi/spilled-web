@@ -6,6 +6,8 @@ import {
   Body,
   Container,
   Section,
+  Row,
+  Column,
   Text,
   Button,
   Link,
@@ -14,123 +16,188 @@ import {
   Img,
 } from '@react-email/components';
 
+const DEFAULT_APP_STORE_URL =
+  'https://apps.apple.com/ke/app/strathspace/id6757879443';
+const DEFAULT_PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.strathspace.android';
+
+/** Official badge assets (absolute URLs) for email clients */
+const APP_STORE_BADGE_IMG =
+  'https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83';
+const GOOGLE_PLAY_BADGE_IMG =
+  'https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png';
+
 interface OnboardingEmailProps {
   recipientEmail?: string;
   recipientName?: string;
   previewText?: string;
+  appStoreUrl?: string;
+  playStoreUrl?: string;
 }
 
 export const OnboardingEmail: React.FC<OnboardingEmailProps> = ({
   recipientEmail = '',
   recipientName = '',
-  previewText = "The tea is hot ☕… and it's only for you 💕",
+  previewText = 'No more endless chatting. Real dates only.',
+  appStoreUrl: appStoreUrlProp,
+  playStoreUrl: playStoreUrlProp,
 }) => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spilledforwomen.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://strathspace.com';
+  const appStoreUrl =
+    appStoreUrlProp ??
+    process.env.APP_STORE_URL ??
+    process.env.NEXT_PUBLIC_APP_STORE_URL ??
+    DEFAULT_APP_STORE_URL;
+  const playStoreUrl =
+    playStoreUrlProp ??
+    process.env.PLAY_STORE_URL ??
+    process.env.NEXT_PUBLIC_PLAY_STORE_URL ??
+    DEFAULT_PLAY_STORE_URL;
+
+  const firstName = (() => {
+    if (recipientName) {
+      const name = recipientName.trim().split(' ')[0];
+      if (name) return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    }
+
+    const local = recipientEmail ? decodeURIComponent(recipientEmail) : '';
+    const firstPart = local ? local.split('@')[0].split(/[._\-+]/)[0] : '';
+
+    return firstPart
+      ? firstPart.charAt(0).toUpperCase() + firstPart.slice(1).toLowerCase()
+      : 'there';
+  })();
 
   return (
     <Html>
       <Head />
       <Preview>{previewText}</Preview>
+
       <Body style={main}>
         <Container style={container}>
-          {/* Logo */}
           <Section style={logoContainer}>
             <Img
-              src={`${baseUrl}/spilled-icon.png`}
-              width="60"
-              height="60"
-              alt="Spilled"
+              src={`${baseUrl}/logo.png`}
+              width="64"
+              height="64"
+              alt="StrathSpace"
               style={logo}
             />
           </Section>
 
-          {/* Content */}
           <Section style={contentContainer}>
-            <Heading style={h1}>💌 The Tea is Hot, Bestie…</Heading>
-            
+            <Heading style={h1}>👀 StrathSpace just got real.</Heading>
+
+            <Text style={paragraph}>Hey {firstName},</Text>
+
             <Text style={paragraph}>
-              Psst… hey {(() => {
-                // First try to use the provided name
-                if (recipientName) {
-                  const firstName = recipientName.trim().split(' ')[0];
-                  if (firstName) {
-                    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                  }
-                }
-                // Fallback to email parsing
-                const local = recipientEmail ? decodeURIComponent(recipientEmail) : '';
-                const firstPart = local ? local.split('@')[0].split(/[._\-+]/)[0] : '';
-                return firstPart
-                  ? firstPart.charAt(0).toUpperCase() + firstPart.slice(1).toLowerCase()
-                  : 'Bestie';
-              })()} 👀{' '}
-              We noticed something. While StrathSpace was fun, you deserve a space that's <strong>truly yours</strong>.
+              You signed up for <strong>StrathSpace</strong> earlier — and we’ve made some big changes.
             </Text>
 
             <Text style={paragraph}>
-              That’s why we built <strong>Spilled</strong>  a safe, private, invite-only circle where  women can share dating stories, swap advice, and always look out for each other 💕
+              Most dating apps feel the same: endless chatting, unserious matches, and conversations that never become real dates.
             </Text>
 
-            {/* Highlight Invite Box */}
+            <Text style={paragraph}>
+              So we rebuilt the flow around one thing: <strong>real intention.</strong>
+            </Text>
+
             <Section style={highlightBox}>
-              <Text style={highlightText}>
-                🎉 You’re one of the <strong>very first</strong> to be invited.
-              </Text>
-              <Text style={subHighlightText}>
-                As an OG Spiller, you’ll unlock:
-              </Text>
+              <Text style={highlightText}>🔥 How StrathSpace works now</Text>
+
               <ul style={benefitsList}>
-                <li>✨ Exclusive <strong>"OG Spiller"</strong> badge</li>
-                <li>🔮 Early access to new features</li>
-                <li>💬 Priority in polls & community decisions</li>
-                <li>🎁 Special surprises (only for insiders)</li>
+                <li>Curated matches instead of endless swiping</li>
+                <li>A quick vibe-check before meeting</li>
+                <li>If both people say yes, StrathSpace helps arrange the real date</li>
+                <li>Only serious people move forward</li>
               </ul>
             </Section>
 
-            {/* CTA */}
-            <Section style={buttonContainer}>
-              <Button
-                style={button}
-                href={`${baseUrl}/signin?ref=invite&email=${encodeURIComponent(recipientEmail)}`}
-              >
-                Join Spilled Now 💌
-              </Button>
+            <Text style={paragraph}>
+              No more “we should meet” that never happens.
+              <br />
+              No more wasting time.
+            </Text>
+
+            <Text style={paragraph}>
+              And to keep things intentional, there’s now a small <strong>Date Confirmation Fee</strong> of <strong>KES 500</strong> only when both people are ready to meet.
+            </Text>
+
+            <Text style={paragraph}>
+              If someone doesn’t confirm, the match expires so both people can move on.
+            </Text>
+
+           
+
+            <Section style={storeSection}>
+              <Text style={storeHeading}>Download the app</Text>
+              <Text style={storeSubtext}>
+                Use StrathSpace on your phone — tap your store below.
+              </Text>
+              <Row style={storeRow}>
+                <Column align="center" style={storeColumn}>
+                  <Link href={appStoreUrl} style={storeBadgeLink}>
+                    <Img
+                      src={APP_STORE_BADGE_IMG}
+                      width={135}
+                      height={40}
+                      alt="Download on the App Store"
+                      style={storeBadgeImg}
+                    />
+                  </Link>
+                </Column>
+                <Column align="center" style={storeColumn}>
+                  <Link href={playStoreUrl} style={storeBadgeLink}>
+                    <Img
+                      src={GOOGLE_PLAY_BADGE_IMG}
+                      width={155}
+                      height={60}
+                      alt="Get it on Google Play"
+                      style={storeBadgeImg}
+                    />
+                  </Link>
+                </Column>
+              </Row>
             </Section>
 
-            {/* Features */}
             <Text style={paragraph}>
-              <strong>What makes Spilled different?</strong>
+              <strong>Why this matters:</strong>
             </Text>
 
             <Section style={featuresList}>
               <Text style={featureItem}>
-                🔍 <strong>Check the vibes:</strong> Search someone before a date, see what other girls say
+                💯 <strong>More serious matches:</strong> People who confirm are actually interested.
               </Text>
+
               <Text style={featureItem}>
-                🛡️ <strong>Real sisters only:</strong> Every member is ID-verified for safety
+                ⏳ <strong>Less time wasted:</strong> Matches expire if people don’t act.
               </Text>
+
               <Text style={featureItem}>
-                💭 <strong>Your story, your way:</strong> Post with your name… or stay anonymous
+                ☕ <strong>Real dates:</strong> The goal is not endless chatting — it’s meeting.
               </Text>
+
               <Text style={featureItem}>
-                🚩 <strong>Flags don’t lie:</strong> Spot red flags, celebrate green ones, keep each other safe
+                🔐 <strong>Better experience:</strong> StrathSpace keeps the flow intentional and respectful.
               </Text>
             </Section>
 
             <Hr style={hr} />
 
             <Text style={footerText}>
-              The tea is hot, the circle is waiting, and your sisters are already inside. ☕✨
+              The people coming back now are more intentional.
+              <br />
+              This is not the same StrathSpace you tried before.
             </Text>
 
             <Text style={signature}>
-              With love,<br />
-              <strong>The Spilled Team</strong> 💕
+              See you inside,
+              <br />
+              <strong>The StrathSpace Team</strong>
             </Text>
 
             <Hr style={hr} />
 
-            {/* Footer */}
             <Text style={footer}>
               <Link href={`${baseUrl}/privacy`} style={link}>
                 Privacy Policy
@@ -145,12 +212,10 @@ export const OnboardingEmail: React.FC<OnboardingEmailProps> = ({
               </Link>
             </Text>
 
-            <Text style={footer}>
-              © 2025 Spilled. Made with 💕 for women.
-            </Text>
+            <Text style={footer}>© 2026 StrathSpace. Built for real connections.</Text>
 
             <Text style={unsubscribe}>
-              You’re receiving this one-time invite because you signed up on strathspace.  
+              You’re receiving this because you signed up on StrathSpace.
             </Text>
           </Section>
         </Container>
@@ -161,15 +226,16 @@ export const OnboardingEmail: React.FC<OnboardingEmailProps> = ({
 
 // Styles
 const main = {
-  backgroundColor: '#FFF8F9',
+  backgroundColor: '#FFF7F4',
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 };
 
 const container = {
   margin: '0 auto',
-  padding: '20px 0 48px',
-  maxWidth: '580px',
+  padding: '20px 16px 48px',
+  maxWidth: '720px',
+  width: '100%',
 };
 
 const logoContainer = {
@@ -183,52 +249,45 @@ const logo = {
 
 const contentContainer = {
   backgroundColor: '#ffffff',
-  borderRadius: '12px',
-  padding: '32px',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  borderRadius: '16px',
+  padding: '32px 36px',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
 };
 
 const h1 = {
-  color: '#333',
-  fontSize: '24px',
+  color: '#241515',
+  fontSize: '26px',
   fontWeight: 'bold',
   textAlign: 'center' as const,
   margin: '0 0 24px',
-  lineHeight: '1.4',
+  lineHeight: '1.35',
 };
 
 const paragraph = {
-  color: '#525252',
+  color: '#4B3A35',
   fontSize: '16px',
-  lineHeight: '1.6',
+  lineHeight: '1.65',
   margin: '16px 0',
 };
 
 const highlightBox = {
-  backgroundColor: '#FFF0F5',
-  borderRadius: '8px',
+  backgroundColor: '#FFF1EC',
+  borderRadius: '12px',
   padding: '20px',
   margin: '24px 0',
-  border: '2px solid #FFE4E1',
+  border: '1px solid #FFD6C8',
 };
 
 const highlightText = {
-  color: '#D96BA0',
+  color: '#E85D3F',
   fontSize: '18px',
   fontWeight: 'bold',
   textAlign: 'center' as const,
-  margin: '0 0 8px',
-};
-
-const subHighlightText = {
-  color: '#666',
-  fontSize: '14px',
-  textAlign: 'center' as const,
-  margin: '8px 0',
+  margin: '0 0 10px',
 };
 
 const benefitsList = {
-  color: '#525252',
+  color: '#4B3A35',
   fontSize: '14px',
   lineHeight: '1.8',
   paddingLeft: '20px',
@@ -241,8 +300,8 @@ const buttonContainer = {
 };
 
 const button = {
-  backgroundColor: '#D96BA0',
-  borderRadius: '24px',
+  backgroundColor: '#E85D3F',
+  borderRadius: '999px',
   color: '#ffffff',
   fontSize: '16px',
   fontWeight: 'bold',
@@ -250,7 +309,54 @@ const button = {
   textAlign: 'center' as const,
   display: 'inline-block',
   padding: '14px 32px',
-  boxShadow: '0 4px 6px rgba(217, 107, 160, 0.3)',
+  boxShadow: '0 6px 14px rgba(232, 93, 63, 0.28)',
+};
+
+const storeSection = {
+  margin: '28px 0',
+  padding: '24px 16px',
+  backgroundColor: '#FFFBF9',
+  borderRadius: '12px',
+  border: '1px solid #FFE4DB',
+};
+
+const storeHeading = {
+  color: '#241515',
+  fontSize: '18px',
+  fontWeight: 'bold',
+  textAlign: 'center' as const,
+  margin: '0 0 6px',
+  lineHeight: '1.3',
+};
+
+const storeSubtext = {
+  color: '#6B5A55',
+  fontSize: '14px',
+  textAlign: 'center' as const,
+  margin: '0 0 16px',
+  lineHeight: '1.5',
+};
+
+const storeRow = {
+  margin: '0',
+};
+
+const storeColumn = {
+  width: '50%',
+  verticalAlign: 'middle' as const,
+  padding: '6px',
+};
+
+const storeBadgeLink = {
+  display: 'inline-block',
+  textDecoration: 'none',
+};
+
+const storeBadgeImg = {
+  display: 'block',
+  margin: '0 auto',
+  border: '0',
+  outline: 'none',
 };
 
 const featuresList = {
@@ -258,28 +364,28 @@ const featuresList = {
 };
 
 const featureItem = {
-  color: '#525252',
+  color: '#4B3A35',
   fontSize: '14px',
   lineHeight: '1.6',
   margin: '12px 0',
-  paddingLeft: '24px',
 };
 
 const hr = {
-  borderColor: '#e6e6e6',
+  borderColor: '#EFE1DC',
   margin: '24px 0',
 };
 
 const footerText = {
-  color: '#666',
+  color: '#6B5A55',
   fontSize: '15px',
   textAlign: 'center' as const,
   margin: '20px 0',
   fontStyle: 'italic',
+  lineHeight: '1.6',
 };
 
 const signature = {
-  color: '#525252',
+  color: '#4B3A35',
   fontSize: '15px',
   textAlign: 'center' as const,
   margin: '16px 0',
@@ -287,19 +393,19 @@ const signature = {
 };
 
 const footer = {
-  color: '#999',
+  color: '#9A8983',
   fontSize: '12px',
   textAlign: 'center' as const,
   margin: '8px 0',
 };
 
 const link = {
-  color: '#D96BA0',
+  color: '#E85D3F',
   textDecoration: 'none',
 };
 
 const unsubscribe = {
-  color: '#b3b3b3',
+  color: '#B8AAA5',
   fontSize: '11px',
   textAlign: 'center' as const,
   margin: '16px 0 0',

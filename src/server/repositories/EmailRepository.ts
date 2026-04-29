@@ -2,6 +2,9 @@ import { db } from '@/server/db/connection';
 import { emailList, emailCampaigns, emailCampaignRecipients, type EmailListEntry, type EmailCampaign } from '@/server/db/schema';
 import { eq, desc, and, inArray, sql, or, ilike } from 'drizzle-orm';
 
+/** Keeps DELETE ... WHERE id IN (...) under Postgres driver parameter limits */
+const DELETE_IDS_CHUNK = 300;
+
 export class EmailRepository {
   // Email List Operations
   async getAllEmails(limit = 1000, offset = 0) {
@@ -177,12 +180,38 @@ export class EmailRepository {
 
   async deleteMultipleEmails(ids: string[]) {
     if (ids.length === 0) return [];
-    
-    const results = await db
-      .delete(emailList)
-      .where(inArray(emailList.id, ids))
-      .returning();
+
+    const results: EmailListEntry[] = [];
+    for (let i = 0; i < ids.length; i += DELETE_IDS_CHUNK) {
+      const chunk = ids.slice(i, i + DELETE_IDS_CHUNK);
+      await db
+        .delete(emailCampaignRecipients)
+        .where(inArray(emailCampaignRecipients.emailId, chunk));
+
+      const batch = await db
+        .delete(emailList)
+        .where(inArray(emailList.id, chunk))
+        .returning();
+      results.push(...batch);
+    }
     return results;
+  }
+
+  async deleteEmailsByBatch(batch: number) {
+    if (Number.isNaN(batch)) return [];
+
+    await db.execute(
+      sql`DELETE FROM email_campaign_recipients WHERE email_id IN (SELECT id FROM email_list WHERE batch = ${batch})`
+    );
+
+    return db.delete(emailList).where(eq(emailList.batch, batch)).returning();
+  }
+
+  async deleteAllEmails() {
+    await db.execute(
+      sql`DELETE FROM email_campaign_recipients WHERE email_id IN (SELECT id FROM email_list)`
+    );
+    return db.delete(emailList).where(sql`true`).returning();
   }
 
   // Campaign Operations

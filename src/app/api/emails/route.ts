@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q');
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '1000');
+    const limit = parseInt(searchParams.get('limit') || '50000');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let emails;
@@ -85,7 +85,21 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ids } = body;
+    const { ids, deleteAll, deleteBatch } = body;
+
+    if (deleteAll === true) {
+      const results = await emailRepository.deleteAllEmails();
+      return NextResponse.json({ deleted: results.length });
+    }
+
+    if (deleteBatch != null && deleteBatch !== '') {
+      const batch = Number(deleteBatch);
+      if (Number.isNaN(batch)) {
+        return NextResponse.json({ error: 'Invalid batch' }, { status: 400 });
+      }
+      const results = await emailRepository.deleteEmailsByBatch(batch);
+      return NextResponse.json({ deleted: results.length });
+    }
 
     if (!ids || !Array.isArray(ids)) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });

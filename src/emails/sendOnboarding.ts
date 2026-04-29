@@ -4,7 +4,7 @@ import { resend, EMAIL_CONFIG, formatSender, delay, retryWithBackoff, type Batch
 import OnboardingEmail from './templates/OnboardingEmail';
 
 // Email configuration
-const SUBJECT = "Bestie, you’ve been invited to Spilled 💌";
+const SUBJECT = "We made StrathSpace better 👀";
 const BATCH_SIZE = 10; // Process emails in batches to optimize performance
 
 // Type definitions

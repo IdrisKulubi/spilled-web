@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,13 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Users
+  Users,
+  FileSpreadsheet
 } from 'lucide-react';
+import {
+  parseEmailListFromPlainText,
+  parseEmailsFromFile,
+} from '@/lib/email-import-file';
 
 interface EmailEntry {
   id: string;
@@ -31,6 +36,7 @@ interface EmailEntry {
 
 export default function SimpleEmailDashboard() {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [emails, setEmails] = useState<EmailEntry[]>([]);
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -126,13 +132,7 @@ export default function SimpleEmailDashboard() {
       return;
     }
 
-    const lines = importText.split('\n').filter(line => line.trim());
-    const emailList = lines.map(line => {
-      const parts = line.split(/[,\t]/);
-      const email = parts[0]?.trim();
-      const name = parts[1]?.trim();
-      return { email, name };
-    }).filter(item => item.email);
+    const emailList = parseEmailListFromPlainText(importText);
 
     console.log('Adding emails:', emailList);
 
@@ -189,6 +189,45 @@ export default function SimpleEmailDashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    try {
+      const rows = await parseEmailsFromFile(file);
+      if (rows.length === 0) {
+        toast({
+          title: 'No addresses found',
+          description: 'Could not find valid email addresses in that file.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const lines = rows.map((r) =>
+        r.name ? `${r.email}, ${r.name}` : r.email
+      );
+      setImportText((prev) => {
+        const base = prev.trim() ? `${prev.trimEnd()}\n` : '';
+        return base + lines.join('\n');
+      });
+      toast({
+        title: 'File imported',
+        description: `Loaded ${rows.length} email${
+          rows.length === 1 ? '' : 's'
+        } into the box. Review and click Add to List.`,
+      });
+    } catch (err) {
+      toast({
+        title: 'Import failed',
+        description:
+          err instanceof Error ? err.message : 'Could not read that file.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -262,7 +301,7 @@ export default function SimpleEmailDashboard() {
   const handleDelete = async () => {
     if (selectedEmails.size === 0) return;
 
-    if (!confirm(`Delete ${selectedEmails.size} emails?`)) return;
+    if (!confirm(`Delete ${selectedEmails.size} selected emails?`)) return;
 
     setLoading(true);
     try {
@@ -281,11 +320,169 @@ export default function SimpleEmailDashboard() {
         });
         setSelectedEmails(new Set());
         fetchEmails();
+        fetchBatches();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete emails",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete emails",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteOne = async (id: string, address: string) => {
+    if (!confirm(`Remove ${address} from the list?`)) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/emails', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Removed",
+          description: `Deleted ${data.deleted} email`,
+        });
+        setSelectedEmails((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        fetchEmails();
+        fetchBatches();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete email",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteBatchEmails = async () => {
+    if (activeBatch === 'ALL') return;
+    const batchNum = Number(activeBatch);
+    const inBatch = emails.filter((e) => e.batch === batchNum);
+    if (inBatch.length === 0) {
+      toast({
+        title: "Nothing to delete",
+        description: `No emails are assigned to batch ${activeBatch}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (
+      !confirm(
+        `Delete all ${inBatch.length} emails in batch ${activeBatch}? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/emails', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deleteBatch: batchNum }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Batch removed",
+          description: `Deleted ${data.deleted} emails from batch ${activeBatch}.`,
+        });
+        setSelectedEmails(new Set());
+        setActiveBatch('ALL');
+        fetchEmails();
+        fetchBatches();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete batch",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete batch",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAllEmails = async () => {
+    if (emails.length === 0) return;
+    if (
+      !confirm(
+        `Delete ALL ${emails.length} emails from the database? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    if (
+      !confirm(
+        "Please confirm again: every saved address will be removed from this list."
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/emails', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deleteAll: true }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "List cleared",
+          description: `Removed ${data.deleted} emails.`,
+        });
+        setSelectedEmails(new Set());
+        setActiveBatch('ALL');
+        fetchEmails();
+        fetchBatches();
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to delete all emails",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete all emails",
         variant: "destructive",
       });
     } finally {
@@ -388,9 +585,19 @@ export default function SimpleEmailDashboard() {
               <Upload className="w-5 h-5" />
               Add Emails
             </CardTitle>
-            <CardDescription>Paste emails below (one per line)</CardDescription>
+            <CardDescription>
+              Paste emails, or import from Excel (.xlsx, .xls), CSV, or Word
+              (.docx). Legacy .doc is not supported—save as .docx first.
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,text/csv"
+              className="sr-only"
+              onChange={handleFileSelected}
+            />
             <Textarea
               placeholder="email1@example.com
 email2@example.com, Jane Doe
@@ -404,14 +611,23 @@ email3@example.com"
                 }
               }}
               rows={10}
-              className="font-mono text-sm border-2 focus:border-pink-300 transition-colors"
+              className="font-mono text-sm border-2 focus:border-pink-300 transition-colors field-sizing-fixed max-h-72 min-h-40 resize-y overflow-y-auto"
               disabled={loading}
             />
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mt-2">
               <p className="text-sm text-muted-foreground">
                 {importText.split('\n').filter(l => l.trim()).length} emails detected • Press Ctrl+Enter to add
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Import file
+                </Button>
                 <Button 
                   type="button"
                   onClick={handleBulkImport}
@@ -453,18 +669,52 @@ email3@example.com"
           </CardHeader>
           <CardContent className="p-6">
             <div className="flex flex-wrap gap-2 mb-4 items-center">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button type="button" onClick={selectAll} variant="outline" size="sm">
                   Select All ({activeBatch === 'ALL' ? emails.length : emails.filter(e => e.batch === Number(activeBatch)).length})
                 </Button>
                 <Button type="button" onClick={deselectAll} variant="outline" size="sm">
                   Deselect All
                 </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={loading || selectedEmails.size === 0}
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete selected ({selectedEmails.size})
+                </Button>
                 <Button type="button" onClick={() => { fetchEmails(); fetchBatches(); }} variant="outline" size="sm" disabled={loading}>
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 </Button>
                 <Button type="button" onClick={handleCreateBatches} variant="outline" size="sm" disabled={loading}>
                   Create Batches
+                </Button>
+                {activeBatch !== 'ALL' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                    disabled={loading || emails.filter((e) => e.batch === Number(activeBatch)).length === 0}
+                    onClick={handleDeleteBatchEmails}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete batch {activeBatch}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                  disabled={loading || emails.length === 0}
+                  onClick={handleDeleteAllEmails}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete all
                 </Button>
               </div>
 
@@ -539,6 +789,17 @@ email3@example.com"
                               {email.sentCount}x
                             </Badge>
                           )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                            disabled={loading}
+                            onClick={() => handleDeleteOne(email.id, email.email)}
+                            aria-label={`Remove ${email.email}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -555,7 +816,7 @@ email3@example.com"
                 </div>
                 {selectedEmails.size > 0 && (
                   <Button type="button" onClick={handleDelete} variant="outline" disabled={loading}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete selected ({selectedEmails.size})
                   </Button>
                 )}
                 <Button

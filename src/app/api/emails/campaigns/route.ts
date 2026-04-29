@@ -4,6 +4,9 @@ import { sendOnboardingEmails } from '@/emails/sendOnboarding';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 
+/** Sending + retry waves can exceed the default 60s on serverless hosts. */
+export const maxDuration = 300;
+
 // GET /api/emails/campaigns - list campaigns with stats
 export async function GET() {
   try {
@@ -70,6 +73,9 @@ export async function POST(request: NextRequest) {
     const result = await sendOnboardingEmails(recipientsWithNames, {
       batchSize,
       dryRun,
+      retryUntilAllSent: true,
+      maxRetryRounds: 10,
+      retryRoundDelayMs: 3000,
       onSuccess: async (email, messageId) => {
         const entry = validEmails.find((e) => e!.email === email);
         if (entry) {

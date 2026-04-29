@@ -14,6 +14,12 @@ export interface SendOnboardingOptions {
   onProgress?: (current: number, total: number, email: string) => void;
   onError?: (email: string, error: string) => void;
   onSuccess?: (email: string, messageId?: string) => void;
+  /** When true (recommended for UI campaigns), failed recipients are retried until all succeed or maxRetryRounds is reached. */
+  retryUntilAllSent?: boolean;
+  /** Maximum send waves (first attempt + retries). Default 12. */
+  maxRetryRounds?: number;
+  /** Base delay between retry waves; multiplied by min(round, 5). Default 2500ms. */
+  retryRoundDelayMs?: number;
 }
 
 /**
@@ -172,42 +178,86 @@ export async function sendOnboardingEmails(
     }
   }
 
-  const results: EmailResult[] = [];
   const batchSize = options?.batchSize || BATCH_SIZE;
-  
-  // Process emails in batches
-  for (let i = 0; i < recipients.length; i += batchSize) {
-    const batch = recipients.slice(i, Math.min(i + batchSize, recipients.length));
-    const batchPromises = batch.map(async (recipient, index) => {
-      const currentIndex = i + index + 1;
-      
-      // Call progress callback
-      options?.onProgress?.(currentIndex, recipients.length, recipient.email);
-      
-      // Send email
-      const result = await sendSingleEmail(recipient.email, recipient.name, options);
-      
-      // Apply rate limiting between emails in the same batch
-      if (index < batch.length - 1) {
-        await delay(EMAIL_CONFIG.rateLimit.delayMs);
+  const retryUntilAllSent = options?.retryUntilAllSent === true;
+  const maxRetryRounds = Math.max(
+    1,
+    options?.maxRetryRounds ?? (retryUntilAllSent ? 12 : 1)
+  );
+  const retryRoundDelayMs = options?.retryRoundDelayMs ?? 2500;
+
+  const recipientByEmail = new Map(
+    recipients.map((r) => [r.email, r.name] as const)
+  );
+
+  async function sendRecipientRound(
+    roundRecipients: { email: string; name?: string }[],
+    totalForProgress: number
+  ): Promise<EmailResult[]> {
+    const roundResults: EmailResult[] = [];
+    for (let i = 0; i < roundRecipients.length; i += batchSize) {
+      const batch = roundRecipients.slice(
+        i,
+        Math.min(i + batchSize, roundRecipients.length)
+      );
+      const batchPromises = batch.map(async (recipient, index) => {
+        const currentIndex = i + index + 1;
+        options?.onProgress?.(currentIndex, totalForProgress, recipient.email);
+        const result = await sendSingleEmail(
+          recipient.email,
+          recipient.name,
+          options
+        );
+        if (index < batch.length - 1) {
+          await delay(EMAIL_CONFIG.rateLimit.delayMs);
+        }
+        return result;
+      });
+      const batchResults = await Promise.all(batchPromises);
+      roundResults.push(...batchResults);
+      if (i + batchSize < roundRecipients.length) {
+        await delay(EMAIL_CONFIG.rateLimit.delayMs * 2);
       }
-      
-      return result;
-    });
-    
-    // Wait for the batch to complete
-    const batchResults = await Promise.all(batchPromises);
-    results.push(...batchResults);
-    
-    // Add extra delay between batches
-    if (i + batchSize < recipients.length) {
-      await delay(EMAIL_CONFIG.rateLimit.delayMs * 2);
+    }
+    return roundResults;
+  }
+
+  let pending = [...recipients];
+  const latestByEmail = new Map<string, EmailResult>();
+  const totalRecipients = recipients.length;
+
+  for (let round = 1; round <= maxRetryRounds && pending.length > 0; round++) {
+    if (round > 1) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(
+          `📧 Retry wave ${round}/${maxRetryRounds}: ${pending.length} recipient(s) still failing`
+        );
+      }
+    }
+
+    const roundResults = await sendRecipientRound(pending, totalRecipients);
+    for (const r of roundResults) {
+      latestByEmail.set(r.email, r);
+    }
+
+    pending = roundResults
+      .filter((r) => !r.success)
+      .map((r) => ({
+        email: r.email,
+        name: recipientByEmail.get(r.email),
+      }));
+
+    if (pending.length === 0) break;
+    if (round < maxRetryRounds) {
+      const wait = retryRoundDelayMs * Math.min(round, 5);
+      await delay(wait);
     }
   }
 
-  // Compile results
-  const sent = results.filter(r => r.success);
-  const failed = results.filter(r => !r.success);
+  const results = recipients.map((r) => latestByEmail.get(r.email)!);
+
+  const sent = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
 
   const summary: BatchEmailResult = {
     sent,
